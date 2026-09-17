@@ -55,6 +55,12 @@ button.stat:hover { border-color: var(--cg-semantic-border-strong); box-shadow: 
 .activityFunnelTooltip strong { color: var(--cg-semantic-text-primary); font-weight: 600; }
 .activityFunnelStage:nth-last-child(-n+2) .activityFunnelTooltip { right: 0; left: auto; }
 .activityFunnelFooter { display: flex; justify-content: space-between; gap: var(--cg-space-3); margin-top: var(--cg-space-2); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-mono-sm); }
+.resultsGroup { background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-lg); }
+.resultsGroup > .viewBar { border: 0; }
+.resultsGroup > .filterBar, .resultsGroup > .batchBar { border-right: 0; border-left: 0; }
+.resultsGroup > .activityFunnel { margin-bottom: 0; border: 0; border-bottom: 1px solid var(--cg-semantic-border-default); border-radius: 0; box-shadow: none; }
+.resultsGroup > .outageBanner { border: 0; }
+.resultsGroup > .workspace { border: 0; border-radius: 0 0 var(--cg-radius-lg) var(--cg-radius-lg); }
 .viewBar { display: flex; align-items: center; justify-content: space-between; min-height: 3.25rem; padding: var(--cg-space-2) var(--cg-space-3); background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-bottom: 0; border-radius: var(--cg-radius-lg) var(--cg-radius-lg) var(--cg-radius-sm) var(--cg-radius-sm); }
 .savedViews { display: flex; gap: var(--cg-space-1); }
 .savedViews button { padding: var(--cg-space-2) var(--cg-space-3); border: 0; border-radius: var(--cg-radius-pill); background: transparent; color: var(--cg-semantic-text-secondary); cursor: pointer; }

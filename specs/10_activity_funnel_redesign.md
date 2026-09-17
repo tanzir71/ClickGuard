@@ -37,6 +37,8 @@ No chart brushing, new filtering controls, timeline interpretation, dashboard KP
 
 ## Implementation and verification
 
+Placement refinement: the funnel belongs directly below the filters, inside the shared traffic-results frame (views → filters → funnel → alert → table). Its standalone card border, shadow, radius, and outer gap are removed in this context. The full-width summary stays aligned with the filters when visitor details open; the standalone Storybook component retains its card treatment.
+
 Implemented the connected SVG profile, shared scale, numbered baseline, directional arrow, semantic markers, accessible stage tooltips, and filter-derived status counts without adding dependencies. The card is approximately 210px tall in the prototype.
 
 - Automated coverage: six new funnel tests plus the seven existing mechanics tests; default counts, nested ranges, both percentage denominators, empty/single/flat geometry, focus/hover/Escape, and dashboard risk/search/date updates.

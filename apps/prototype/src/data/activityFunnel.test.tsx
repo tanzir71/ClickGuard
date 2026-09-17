@@ -64,9 +64,15 @@ describe('activity funnel', () => {
     expect(container.querySelectorAll('svg path')).toHaveLength(1);
   });
 
-  it('reacts to the dashboard risk, search, and range filters', () => {
+  // The complete fixture renders hundreds of visit controls in jsdom.
+  it('places the funnel below filters inside the results frame and reacts to filters', () => {
     render(<ThreatMonitor visitors={visitorViewModels} now={FIXED_NOW} />);
-    const funnel = within(screen.getByRole('region', { name: 'Traffic evaluation' }));
+    const resultsGroup = within(screen.getByRole('region', { name: 'Traffic results' }));
+    const funnelRegion = resultsGroup.getByRole('region', { name: 'Traffic evaluation' });
+    const filters = resultsGroup.getByRole('region', { name: 'Filters' });
+    expect(filters.nextElementSibling).toBe(funnelRegion);
+    expect(funnelRegion.compareDocumentPosition(resultsGroup.getByRole('table', { name: 'Threat monitoring results' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const funnel = within(funnelRegion);
     fireEvent.change(screen.getByLabelText('Filter by risk'), { target: { value: 'high' } });
     expect(funnel.getByRole('button', { name: /Evaluated: 41 visitors/ })).toBeDefined();
     expect(funnel.getByRole('button', { name: /At risk: 39 visitors/ })).toBeDefined();
@@ -75,5 +81,5 @@ describe('activity funnel', () => {
     expect(funnel.getAllByText(/Last 24 hours/).length).toBeGreaterThan(0);
     fireEvent.change(screen.getByPlaceholderText(/Search IP/), { target: { value: 'no-matching-visitor' } });
     expect(funnel.getByText('No visitors match the current filters')).toBeDefined();
-  });
+  }, 15000);
 });
