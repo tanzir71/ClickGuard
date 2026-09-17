@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { AlertCircle, Inbox, Radar, SearchX } from 'lucide-react';
 import styles from '../styles/ClickGuard.module.css';
 import { Button } from '../primitives';
@@ -6,6 +6,38 @@ import { Button } from '../primitives';
 export function Stat({ label, value, caption, tone = 'default', onClick }: { label: string; value: string; caption?: string; tone?: 'default' | 'danger' | 'warning' | 'success'; onClick?: () => void }) {
   const content = <><span className={styles.statLabel}>{label}</span><strong className={styles.statValue}>{value}</strong>{caption && <span className={styles.statCaption}>{caption}</span>}</>;
   return onClick ? <button type="button" className={`${styles.stat} ${styles[`stat-${tone}`]}`} onClick={onClick}>{content}</button> : <div className={`${styles.stat} ${styles[`stat-${tone}`]}`}>{content}</div>;
+}
+
+export interface ActivityFunnelStage {
+  id: string;
+  label: string;
+  value: number;
+  detail: string;
+  tone?: 'default' | 'paid' | 'warning' | 'danger';
+}
+
+export function ActivityFunnel({ stages, filtered, total, rangeLabel }: { stages: ActivityFunnelStage[]; filtered: number; total: number; rangeLabel: string }) {
+  const headingId = useId();
+  const baseline = Math.max(stages[0]?.value ?? 0, 1);
+  const scopeLabel = filtered === total ? `${total.toLocaleString()} visitors` : `${filtered.toLocaleString()} of ${total.toLocaleString()} visitors`;
+
+  return <section className={styles.activityFunnel} aria-labelledby={headingId}>
+    <header className={styles.activityFunnelHeader}>
+      <div><span>Activity funnel</span><h2 id={headingId}>From evaluated to blocked</h2></div>
+      <p>{scopeLabel} · {rangeLabel}</p>
+    </header>
+    <ol className={styles.activityFunnelTrack}>
+      {stages.map((stage, index) => {
+        const percentage = Math.max(0, Math.min(100, Math.round((stage.value / baseline) * 100)));
+        return <li className={styles.activityFunnelStage} data-tone={stage.tone ?? 'default'} key={stage.id}>
+          <div><span>{index + 1}. {stage.label}</span><strong>{stage.value.toLocaleString()}</strong></div>
+          <span className={styles.activityFunnelBar} aria-hidden="true"><i data-empty={stage.value === 0} style={{ width: `${percentage}%` }} /></span>
+          <small><span>{stage.detail}</span><strong>{percentage}%</strong></small>
+        </li>;
+      })}
+    </ol>
+    <p className={styles.srOnly} aria-live="polite">{scopeLabel}. {stages.map((stage) => `${stage.label}: ${stage.value}`).join('. ')}.</p>
+  </section>;
 }
 
 export function KeyValue({ label, value, mono = false, tone = 'default' }: { label: string; value?: ReactNode; mono?: boolean; tone?: 'default' | 'danger' | 'success' }) {

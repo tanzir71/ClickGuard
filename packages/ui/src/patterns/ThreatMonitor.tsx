@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Download, Filter, Search, Shield, X } from 'lucide-react';
 import type { Platform, ThreatMonitorProps, VisitVM, VisitorStatus, VisitorVM } from '../model';
-import { BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows, Stat } from '../data';
+import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows, Stat, type ActivityFunnelStage } from '../data';
 import { BehaviorScrubber, DecisionRoute, EventTimeline, ExclusionList, RiskChart, RiskScore, ScoreWaterfall, SignalBar, SignalMeter, SourceTag, SpendReceipt, StatusPill, VerdictCard, VisitRibbon, formatDuration, platformName, shortTime } from '../domain';
 import { Button, Checkbox, IconButton, Menu, SegmentedControl, Sheet, Stack, Tabs, TextInput, Toast } from '../primitives';
 import styles from '../styles/ClickGuard.module.css';
@@ -94,6 +94,33 @@ export function ThreatMonitor({ visitors: initialVisitors, now, initialSimulatio
     return true;
   }), [visitors, simulation, search, status, paidOnly, platform, risk, rangeDays, savedView, now]);
 
+  const activityFunnel = useMemo(() => {
+    const cutoff = new Date(now).getTime() - rangeDays * 86400000;
+    let visits = 0; let paidVisitors = 0; let paidVisits = 0; let atRisk = 0; let thresholdCrossed = 0; let blocked = 0; let protectedSpend = 0;
+
+    for (const visitor of filtered) {
+      const visitsInRange = visitor.visits.filter((visit) => new Date(visit.startedAt).getTime() >= cutoff);
+      const paidVisitsInRange = visitsInRange.filter((visit) => visit.source === 'paid');
+      visits += visitsInRange.length;
+      if (paidVisitsInRange.length === 0) continue;
+      paidVisitors += 1; paidVisits += paidVisitsInRange.length;
+      if (visitor.riskScore < 40) continue;
+      atRisk += 1;
+      if (visitor.riskScore < visitor.threshold) continue;
+      thresholdCrossed += 1;
+      if (!['blocked', 'pending', 'failed'].includes(visitor.status)) continue;
+      blocked += 1; protectedSpend += visitor.protectedSpendEst;
+    }
+
+    return [
+      { id: 'evaluated', label: 'Evaluated', value: filtered.length, detail: `${visits.toLocaleString()} visits` },
+      { id: 'paid', label: 'Paid traffic', value: paidVisitors, detail: `${paidVisits.toLocaleString()} paid clicks`, tone: 'paid' },
+      { id: 'risk', label: 'At risk', value: atRisk, detail: 'Risk score ≥ 40', tone: 'warning' },
+      { id: 'threshold', label: 'Threshold', value: thresholdCrossed, detail: 'Policy threshold met', tone: 'danger' },
+      { id: 'blocked', label: 'Blocked', value: blocked, detail: `~$${protectedSpend.toFixed(0)} protected`, tone: 'danger' },
+    ] satisfies ActivityFunnelStage[];
+  }, [filtered, now, rangeDays]);
+
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     const values: Record<SortKey, [string | number, string | number]> = {
       priority: [a.priority, b.priority], visitor: [a.ip, b.ip], status: [statusRank[a.status], statusRank[b.status]], risk: [a.riskScore, b.riskScore],
@@ -152,6 +179,7 @@ export function ThreatMonitor({ visitors: initialVisitors, now, initialSimulatio
         <Stat label="Wasted spend" value={`$${stats.wasted.toFixed(0)}`} caption="paid clicks before block" tone="danger" onClick={() => setSavedView('wasted')} />
         <Stat label="Protected (est.)" value={`~$${stats.protected.toFixed(0)}`} caption="from stopped ad clicks" tone="success" />
       </section>
+      <ActivityFunnel stages={activityFunnel} filtered={filtered.length} total={visitors.length} rangeLabel={rangeDays === 1 ? 'Last 24 hours' : `Last ${rangeDays} days`} />
       <section className={styles.viewBar}><SegmentedControl label="Result type" value={viewMode} onChange={setViewMode} options={[{ value: 'visitors', label: 'Visitors' }, { value: 'visits', label: 'Visits' }]} /><div className={styles.savedViews} role="group" aria-label="Saved views">{([['all', 'All visitors'], ['review', 'Needs review'], ['blocked', 'Blocked'], ['wasted', 'Wasted > $20'], ['shared', 'Shared IPs']] as Array<[SavedView, string]>).map(([value, label]) => <button type="button" key={value} aria-pressed={savedView === value} onClick={() => setSavedView(value)}>{label}</button>)}</div></section>
       {checked.size ? <BatchBar count={checked.size} onClear={() => setChecked(new Set())}><Button size="sm" variant="danger" onClick={() => batchAction('block')}>Block now</Button><Button size="sm" onClick={() => batchAction('allow')}>Always allow</Button><Button size="sm" onClick={() => batchAction('review')}>Mark reviewed</Button></BatchBar> : <section className={styles.filterBar} aria-label="Filters"><TextInput ref={searchRef} icon={<Search />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search IP, network, city, campaign, click ID…" aria-label="Search visitors" />
         <label className={styles.selectFilter}><Filter /><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter by status"><option value="all">Any</option>{Object.keys(statusRank).map((value) => <option value={value} key={value}>{value}</option>)}</select></label>
