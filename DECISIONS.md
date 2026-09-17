@@ -1,5 +1,7 @@
 # Implementation decisions
 
+- **2026-09-17 · Decision-route alignment:** Centered all milestone glyphs in the same fixed-width column and placed each connector at exactly half that column's width. The line compensates for its own thickness, removing the previous independent offset. Marker height follows the title line height so long descriptions cannot stretch the icon vertically.
+
 - **2026-09-17 · Overview card width:** Added the `size.overview-card` token (14rem / 224px) and capped the left-aligned overview section at five cards plus its existing gaps. This gives cards a consistent width on full-width screens while preserving a single responsive row on smaller desktops. The table and funnel are not constrained.
 
 - **2026-09-17 · Sticky visitor details:** The details panel sticks below the app header within the results workspace, sized to the dynamic viewport with a bottom gutter. The workspace clips rounded corners without creating a scroll container (`overflow: clip`), so document scrolling can drive stickiness. Below 1280px, overlapping grid cells preserve the existing overlay layout without absolute positioning. Only the panel body scrolls; header/actions do not shrink, and reaching the detail scroll boundary does not scroll the table.

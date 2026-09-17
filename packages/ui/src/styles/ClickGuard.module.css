@@ -190,9 +190,9 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .exclusion-syncing, .exclusion-not_connected, .exclusion-removed { color: var(--cg-semantic-text-secondary); }
 .exclusion-failed { color: var(--cg-semantic-status-blocked-fg); }
 .decisionRoute { display: grid; }
-.decisionRoute > div { position: relative; display: grid; grid-template-columns: 1.5rem 1fr; gap: var(--cg-space-2); min-height: 3.5rem; }
-.decisionRoute > div:not(:last-child)::after { content: ''; position: absolute; top: 1.5rem; bottom: var(--cg-space-0); left: 0.7rem; width: 1px; background: var(--cg-semantic-border-strong); }
-.decisionRoute i { position: relative; z-index: 1; font-style: normal; color: var(--cg-semantic-accent); }
+.decisionRoute > div { position: relative; display: grid; grid-template-columns: var(--cg-space-6) 1fr; gap: var(--cg-space-2); min-height: 3.5rem; }
+.decisionRoute > div:not(:last-child)::after { content: ''; position: absolute; top: var(--cg-space-6); bottom: var(--cg-space-0); left: calc(var(--cg-space-6) / 2); width: 1px; transform: translateX(-50%); background: var(--cg-semantic-border-strong); }
+.decisionRoute i { position: relative; z-index: 1; display: grid; place-items: center; width: var(--cg-space-6); height: var(--cg-line-body); font-style: normal; color: var(--cg-semantic-accent); }
 .decisionRoute strong, .decisionRoute small { display: block; }
 .decisionRoute small { margin-top: var(--cg-space-1); color: var(--cg-semantic-text-secondary); }
 .riskChart svg { display: block; width: 100%; overflow: visible; }
