@@ -1,5 +1,7 @@
 # Implementation decisions
 
+- **2026-09-17 · Sharp journey steps:** Table, panel, and expanded risk charts share an orthogonal step connector with miter joins. Risers sit between markers so round visit dots cannot obscure the right-angle corners. Marker time/score positions, score-before values, and decision/post-decision segments are preserved; the connector is illustrative between recorded visits, not a claim of intermediate measurements.
+
 - **2026-09-17 · Story-led expanded journey:** Kept the overview/investigation split, but replaced the raw summary with a derived visitor narrative and clickable milestones. The visit list now runs oldest-to-newest with real date groups and working filters; each selected visit reads as arrival → observed behavior → result. A short event rail summarizes actual records, with full source, scoring, and device evidence behind a disclosure. No screen recording, replay, inferred user intention, or successful exclusion is fabricated. Decision and platform-delivery states remain separate; no-JavaScript means unknown behavior, not zero interaction. This intentionally supersedes the original always-expanded evidence layout and newest-first stream after user feedback.
 
 - **2026-09-17 · Decision-route alignment:** Centered all milestone glyphs in the same fixed-width column and placed each connector at exactly half that column's width. The line compensates for its own thickness, removing the previous independent offset. Marker height follows the title line height so long descriptions cannot stretch the icon vertically.

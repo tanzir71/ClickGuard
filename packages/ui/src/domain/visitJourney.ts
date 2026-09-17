@@ -1,4 +1,5 @@
 import type { VisitVM } from '../model';
+import { riskStepPath } from './riskStepPath';
 
 export const JOURNEY_PLOT = { width: 200, height: 48, left: 8, right: 174, top: 5, bottom: 37 };
 
@@ -25,9 +26,7 @@ export function buildVisitJourney(visits: VisitVM[], threshold = 70, blockedAtVi
     kind: visit.id === blockedAtVisitId ? 'decision' : visit.conversion ? 'conversion' : visit.source === 'paid' ? 'paid' : 'unpaid',
   }));
   const triggerIndex = points.findIndex((point) => point.visit.id === blockedAtVisitId);
-  const path = (start: number, end: number, continuation = false) => points.slice(start, end).map((point, index) => index === 0
-    ? `M ${point.x} ${continuation ? point.y : point.beforeY}${continuation ? '' : ` V ${point.y}`}`
-    : `H ${point.x} V ${point.beforeY} V ${point.y}`).join(' ');
+  const path = (start: number, end: number, continuation = false) => riskStepPath(points.slice(start, end), continuation);
   // Keep the exact score path, but reduce overlapping markers in dense histories.
   // Every visit remains reachable with the arrow keys, including coincident timestamps.
   let previousX = -Infinity;

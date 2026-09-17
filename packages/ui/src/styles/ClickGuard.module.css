@@ -207,7 +207,7 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .chartAxisLabel, .chartThresholdLabel { fill: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
 .chartThresholdLabel { fill: var(--cg-semantic-status-blocked-fg); }
 .chartThreshold, .chartBlock { stroke: var(--cg-semantic-risk-threshold); stroke-width: 1; stroke-dasharray: 4 4; }
-.chartLine, .chartAfterLine { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 1.5; stroke-linejoin: round; }
+.chartLine, .chartAfterLine { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 1.5; stroke-linejoin: miter; stroke-linecap: butt; }
 .chartAfterLine { stroke: var(--cg-semantic-source-organic); stroke-dasharray: 4 3; }
 .chartPaid { fill: var(--cg-semantic-source-paid); stroke: var(--cg-semantic-bg-surface); stroke-width: 1.5; }
 .chartUnpaid { fill: var(--cg-semantic-bg-surface); stroke: var(--cg-semantic-source-organic); stroke-width: 1.5; }
@@ -273,7 +273,7 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .ribbonThreshold { stroke: var(--cg-semantic-border-strong); stroke-width: 1; stroke-dasharray: 3 3; }
 .ribbonScale { fill: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
 .ribbonAxis { fill: none; stroke: var(--cg-semantic-border-default); stroke-width: 1; }
-.ribbonRisk { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 1.5; stroke-linejoin: round; }
+.ribbonRisk { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 1.5; stroke-linejoin: miter; stroke-linecap: butt; }
 .ribbonAfter { stroke: var(--cg-semantic-border-strong); stroke-dasharray: 3 2; }
 .ribbonAfterArea { fill: var(--cg-semantic-bg-subtle); }
 .ribbonDecisionLine { stroke: var(--cg-semantic-status-blocked-fg); stroke-width: 1; stroke-dasharray: 2 2; }

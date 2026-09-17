@@ -45,7 +45,15 @@ describe('table risk journeys', () => {
     expect(dense.points).toHaveLength(60);
     expect(dense.markers.length).toBeLessThan(25);
     expect(dense.markers.some((point) => point.visit.id === 'test_40')).toBe(true);
-    expect(dense.beforePath.split('H')).toHaveLength(41);
+    expect(dense.beforePath.split('H')).toHaveLength(81);
+  });
+
+  it('uses right-angle steps with exposed corners between unchanged visit markers', () => {
+    const chart = buildVisitJourney(sample([10, 30, 20]), 70, 'test_1');
+    expect(chart.points.map(({ x, y }) => [x, y])).toEqual([[8, 33.8], [91, 27.4], [174, 30.6]]);
+    expect(chart.beforePath).toBe('M 8 37 V 33.8 H 49.5 V 33.8 V 27.4 H 91');
+    expect(chart.afterPath).toBe('M 91 27.4 H 132.5 V 27.4 V 30.6 H 174');
+    expect((chart.beforePath + chart.afterPath).replace(/[MHV\d.\s-]/g, '')).toBe('');
   });
 
   it('uses distinct marker shapes, and supports one tab stop with keyboard visit drill-down', () => {

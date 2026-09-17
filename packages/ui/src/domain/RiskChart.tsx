@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { VisitVM } from '../model';
+import { riskStepPath } from './riskStepPath';
 import styles from '../styles/ClickGuard.module.css';
 
 interface RiskChartProps {
@@ -41,15 +42,13 @@ export function RiskChart({ visits, threshold, blockedAtVisitId, selectedVisitId
   const scoreY = (score: number) => bottom - Math.max(0, Math.min(100, score)) / 100 * (bottom - top);
   const points = ordered.map((visit, index) => ({ visit, index,
     x: span > 0 ? left + (Date.parse(visit.startedAt) - start) / span * (right - left) : (left + right) / 2,
-    y: scoreY(visit.scoreAfter),
+    y: scoreY(visit.scoreAfter), beforeY: scoreY(visit.scoreBefore),
   }));
   const decisionIndex = points.findIndex(({ visit }) => visit.id === blockedAtVisitId);
   const decision = points[decisionIndex];
   const selected = points.find(({ visit }) => visit.id === (selectedVisitId ?? localSelectedId)) ?? decision ?? points[points.length - 1];
   const inspected = points.find(({ visit }) => visit.id === (hoveredId ?? focusedId)) ?? selected;
-  const path = (startIndex: number, endIndex: number, continuation = false) => points.slice(startIndex, endIndex).map((point, index) => index === 0
-    ? `M ${point.x} ${continuation ? point.y : scoreY(point.visit.scoreBefore)}${continuation ? '' : ` V ${point.y}`}`
-    : `H ${point.x} V ${scoreY(point.visit.scoreBefore)} V ${point.y}`).join(' ');
+  const path = (startIndex: number, endIndex: number, continuation = false) => riskStepPath(points.slice(startIndex, endIndex), continuation);
   const beforePath = path(0, decisionIndex >= 0 ? decisionIndex + 1 : points.length);
   const afterPath = decisionIndex >= 0 && decisionIndex < points.length - 1 ? path(decisionIndex, points.length, true) : '';
   const thresholdY = scoreY(threshold);
@@ -78,7 +77,7 @@ export function RiskChart({ visits, threshold, blockedAtVisitId, selectedVisitId
   return <div className={`${styles.riskChart} ${styles[`chart-${size}`]}`}>
     <div className={styles.chartHeading}><span>Risk score</span><span className={styles.chartThresholdKey}>Block threshold · {threshold}</span></div>
     <svg className={styles.chartPlot} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`Risk journey. Block threshold ${threshold}.`} aria-describedby={descriptionId} onMouseLeave={() => setHoveredId(undefined)}>
-      <desc id={descriptionId}>Risk score from 0 to 100 over time. Arrow keys move between visits; Enter or Space selects a visit. Diamond marks the block decision, not its delivery status.</desc>
+      <desc id={descriptionId}>Risk score from 0 to 100 over time. Markers show recorded times and scores; steps connect visits, not measurements between them. Arrow keys move between visits; Enter or Space selects a visit. Diamond marks the block decision, not its delivery status.</desc>
       <rect className={styles.chartRiskZone} x={left} y={top} width={right - left} height={thresholdY - top} />
       {ticks.map((score) => <g key={score} aria-hidden="true">
         <line className={styles.chartGrid} x1={left} x2={right} y1={scoreY(score)} y2={scoreY(score)} />

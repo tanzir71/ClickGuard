@@ -54,6 +54,6 @@ export function VisitRibbon({ visits, threshold = 70, blockedAtVisitId, status, 
       {exploring && <circle className={styles.ribbonActive} cx={active.x} cy={active.y} r="6.5" />}
     </svg>
     <span className={styles.ribbonCaption}>{exploring ? `#${active.index + 1} ${active.visit.source} · ${active.visit.scoreBefore} → ${active.visit.scoreAfter}${active.kind === 'decision' ? ' ◆' : active.visit.conversion ? ' ▪' : ''}` : `${visits.length} ${visits.length === 1 ? 'visit' : 'visits'} · ${chart.paid} paid`}</span>
-    <span id={detailId} className={styles.srOnly} aria-live="polite">{exploring ? `${detail} Left/right: previous/next visit. Enter: open details.` : 'Risk uses a fixed 0–100 scale. Horizontal position is elapsed time from first to last recorded visit. Filled circle: paid. Hollow circle: unpaid. Diamond: block decision, not confirmation of platform exclusion. Square: conversion.'}</span>
+    <span id={detailId} className={styles.srOnly} aria-live="polite">{exploring ? `${detail} Left/right: previous/next visit. Enter: open details.` : 'Risk uses a fixed 0–100 scale. Marker position is elapsed time from first to last recorded visit. Steps connect recorded scores, not measurements between visits. Filled circle: paid. Hollow circle: unpaid. Diamond: block decision, not confirmation of platform exclusion. Square: conversion.'}</span>
   </button>;
 }

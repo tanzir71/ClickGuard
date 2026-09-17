@@ -11,6 +11,18 @@ const sample = (scores: number[], offsets = scores.map((_, index) => index * 600
 }));
 
 describe('detailed risk chart', () => {
+  it.each(['panel', 'wide'] as const)('keeps sharp step corners between markers in the %s chart', (size) => {
+    const { container } = render(<RiskChart visits={sample([25, 75, 50])} threshold={70} blockedAtVisitId="risk_1" size={size} />);
+    const before = container.querySelector('path[class*="chartLine"]')!.getAttribute('d')!;
+    const after = container.querySelector('path[class*="chartAfterLine"]')!.getAttribute('d')!;
+    const [middleX, cornerX, nextCornerX, rightX] = size === 'wide' ? [390, 211, 569, 748] : [200, 116, 284, 368];
+    expect(before).toContain(`H ${cornerX} V`);
+    expect(before.endsWith(`H ${middleX}`)).toBe(true);
+    expect(after).toContain(`H ${nextCornerX} V`);
+    expect(after.endsWith(`H ${rightX}`)).toBe(true);
+    expect((before + after).replace(/[MHV\d.\s-]/g, '')).toBe('');
+  });
+
   it('plots chronological visits using real elapsed time and a fixed risk scale', () => {
     const visits = sample([10, 30, 90], [0, 60000, 600000]);
     const { container } = render(<RiskChart visits={[visits[2], visits[0], visits[1]]} threshold={70} />);
