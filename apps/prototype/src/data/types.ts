@@ -1,3 +1,4 @@
+import type { ScoreStep } from '@clickguard/ui';
 export type Platform = 'google_ads' | 'meta_ads' | 'microsoft_ads';
 export type Source = 'paid' | 'organic' | 'direct' | 'referral';
 export type VisitorStatus = 'blocked' | 'monitoring' | 'clean' | 'allowed' | 'pending' | 'failed';
@@ -17,7 +18,8 @@ export interface Visit {
   jsExecuted: boolean; device: { type: 'desktop' | 'mobile' | 'tablet'; os: string; browser: string; ua: string; screen: string; language: string; timezone: string };
   interaction: { level: InteractionLevel; scrollPct: number; clicks: number; timeMs: number; pointerMoves: number };
   botProbability: number; vpnProxy: boolean; formFill?: { emailMasked: string; deliverability: 'valid' | 'invalid' | 'disposable' | 'unknown' };
-  events: VisitEvent[]; signals: SignalHit[]; scoreBefore: number; scoreAfter: number; afterBlock: boolean; converted?: boolean;
+  events: VisitEvent[]; signals: SignalHit[]; scoreSteps: ScoreStep[]; scoreBefore: number; scoreAfter: number; afterBlock: boolean; converted?: boolean;
+  riskObservations?: { outsideTargeting?: boolean; timezoneMismatch?: boolean; businessHoursPattern?: boolean; deviceSpoofing?: boolean; rotatingFingerprints?: boolean };
 }
 
 export interface Visitor {

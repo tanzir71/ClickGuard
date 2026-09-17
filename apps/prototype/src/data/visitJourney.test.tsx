@@ -6,7 +6,7 @@ import { FIXED_NOW, visitorViewModels } from '.';
 afterEach(() => { cleanup(); window.history.replaceState({}, '', '/'); });
 const blocked = visitorViewModels.find((visitor) => visitor.ip === '185.220.101.4')!;
 const sample = (scores: number[], offsets: number[] = scores.map((_, index) => index * 60000)): VisitVM[] => scores.map((score, index) => ({
-  ...blocked.visits[0], id: `test_${index}`, startedAt: new Date(Date.parse(FIXED_NOW) + offsets[index]).toISOString(), scoreBefore: scores[index - 1] ?? 0, scoreAfter: score, afterBlock: false,
+  ...blocked.visits[0], source: 'paid', id: `test_${index}`, startedAt: new Date(Date.parse(FIXED_NOW) + offsets[index]).toISOString(), scoreBefore: scores[index - 1] ?? 0, scoreAfter: score, afterBlock: false,
 }));
 
 describe('table risk journeys', () => {
@@ -96,7 +96,7 @@ describe('table risk journeys', () => {
     const chart = results.getByRole('button', { name: /12 visit journey/ });
     fireEvent.keyDown(chart, { key: 'Home' });
     fireEvent.click(chart);
-    const selectedMarker = screen.getByRole('button', { name: 'Visit 1, score 13' });
+    const selectedMarker = screen.getByRole('button', { name: 'Visit 1, score 34' });
     expect(selectedMarker.getAttribute('class')).toContain('chartSelected');
     expect(window.location.search).toContain('visitor=185.220.101.4');
   });

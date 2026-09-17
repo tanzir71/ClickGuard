@@ -1,6 +1,6 @@
 import { verdict } from './verdict';
 import { platforms } from './account';
-import type { VisitorVM } from '@clickguard/ui';
+import type { SignalVM, VisitorVM } from '@clickguard/ui';
 import { SIGNAL_LABELS } from './scoring';
 import type { DataSet, SignalHit, Visit, Visitor } from './types';
 
@@ -13,9 +13,13 @@ function modeInteraction(visits: Visit[]) {
 }
 
 function aggregateSignals(visits: Visit[]) {
-  const map = new Map<string, SignalHit>();
-  for (const signal of visits.flatMap((visit) => visit.signals)) { const current = map.get(signal.signalId); if (!current || Math.abs(signal.points) > Math.abs(current.points)) map.set(signal.signalId, { ...signal }); }
-  return [...map.values()].sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
+  const map = new Map<string, SignalVM>();
+  for (const visit of visits) for (const step of visit.scoreSteps) {
+    const existing = map.get(step.signalId);
+    const points = (existing?.points ?? 0) + step.points;
+    map.set(step.signalId, { id: step.signalId, label: step.label, points, severity: Math.abs(points) >= 18 ? 'high' : Math.abs(points) >= 8 ? 'med' : 'low', value: visit.signals.find((signal) => signal.signalId === step.signalId)?.value ?? step.reason ?? '' });
+  }
+  return [...map.values()].filter((signal) => signal.points !== 0).sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
 }
 
 export function deriveVisitors(data: DataSet): VisitorVM[] {
@@ -36,13 +40,13 @@ export function deriveVisitors(data: DataSet): VisitorVM[] {
       allowedBy: visitor.allowedBy, visits: visits.map((visit) => ({ id: visit.id, startedAt: visit.startedAt, durationMs: visit.durationMs, source: visit.source, platform: visit.platform, campaign: visit.campaign,
         adGroup: visit.adGroup, keyword: visit.keyword, clickId: visit.gclid ?? visit.fbclid, cpc: visit.cpc, landingPath: visit.landingPath, landingUrl: visit.landingUrl, interaction: { level: visit.interaction.level, scrollPct: visit.interaction.scrollPct, clicks: visit.interaction.clicks, pointerMoves: visit.interaction.pointerMoves }, botProbability: visit.botProbability, vpnProxy: visit.vpnProxy,
         formFill: visit.formFill, conversion: visit.converted ? { type: visit.conversionType ?? 'conversion', value: visit.conversionValue } : undefined, jsExecuted: visit.jsExecuted, events: visit.events, activityBuckets: visit.activityBuckets,
-        signals: visit.signals.map((signal) => ({ id: signal.signalId, label: SIGNAL_LABELS[signal.signalId], value: signal.value, points: signal.points, severity: signal.severity })), scoreBefore: visit.scoreBefore, scoreAfter: visit.scoreAfter, afterBlock: visit.afterBlock, device: visit.device })),
+        scoreSteps: visit.scoreSteps, signals: visit.signals.map((signal) => ({ id: signal.signalId, label: SIGNAL_LABELS[signal.signalId], value: signal.value, points: signal.points, severity: signal.severity })), scoreBefore: visit.scoreBefore, scoreAfter: visit.scoreAfter, afterBlock: visit.afterBlock, device: visit.device })),
       paidVisits: paidVisits.length, unpaidVisits, paidVisitsBeforeBlock: preBlockPaid.length, wastedSpend, protectedSpendEst: visitor.status === 'blocked' ? Math.min(280, wastedSpend * 2.05) : 0,
-      topSignals: topSignals.map((signal) => ({ id: signal.signalId, label: SIGNAL_LABELS[signal.signalId], value: signal.value, points: signal.points, severity: signal.severity })),
+      topSignals,
       maxBotProbability: bots.length ? Math.max(...bots) : 0, avgBotProbability: bots.length ? bots.reduce((sum, value) => sum + value, 0) / bots.length : 0, typicalInteraction: modeInteraction(visits), vpnProxyAny: visits.some((visit) => visit.vpnProxy),
       conversions: converted.length, conversionValueTotal: converted.reduce((sum, visit) => sum + (visit.conversionValue ?? 0), 0), formFills: { valid: forms.filter((value) => value === 'valid').length, invalid: forms.filter((value) => value === 'invalid').length, disposable: forms.filter((value) => value === 'disposable').length },
       priority: (visitor.scenario ? 40000 - Number(visitor.scenario.slice(1)) * 1000 : 0) + severityRank[visitor.status] * 1000 + Math.min(wastedSpend, 99) * 5 + recency, needsReview: visitor.status === 'monitoring' || visitor.status === 'failed' || (visitor.status === 'blocked' && !visitor.reviewed && recencyHours <= 24),
-      verdict: verdict(visitor, visits, topSignals, data.account.timeZone), related: { sameFingerprintIps: visitor.related.sameFingerprintIps.length, subnet24Ips: visitor.related.subnet24Ips.length, asnVisitorCount: visitor.related.asnVisitorCount, asnBlockedCount: visitor.related.asnBlockedCount, networkBlockedAccounts30d: visitor.networkBlockedAccounts30d },
+      verdict: verdict(visitor, visits, topSignals.filter((signal) => signal.id in SIGNAL_LABELS).map((signal) => ({ ...signal, signalId: signal.id as SignalHit['signalId'] })), data.account.timeZone), related: { sameFingerprintIps: visitor.related.sameFingerprintIps.length, subnet24Ips: visitor.related.subnet24Ips.length, asnVisitorCount: visitor.related.asnVisitorCount, asnBlockedCount: visitor.related.asnBlockedCount, networkBlockedAccounts30d: visitor.networkBlockedAccounts30d },
     } satisfies VisitorVM;
   }).sort((a, b) => b.priority - a.priority);
 }

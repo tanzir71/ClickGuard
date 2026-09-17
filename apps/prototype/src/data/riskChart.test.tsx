@@ -37,12 +37,12 @@ describe('detailed risk chart', () => {
 
   it('separates the decision from post-decision activity and preserves external selection', () => {
     const { container } = render(<RiskChart visits={blocked.visits} threshold={70} blockedAtVisitId={blocked.blockedAtVisitId} selectedVisitId={blocked.visits[0].id} />);
-    expect(screen.getByRole('button', { name: 'Visit 1, score 13' }).getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Visit 6, score 76' }).querySelector('path')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Visit 1, score 34' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Visit 6, score 100' }).querySelector('path')).not.toBeNull();
     expect(container.querySelector('path[class*="chartAfterLine"]')?.getAttribute('d')).toContain('H');
-    fireEvent.mouseEnter(screen.getByRole('button', { name: 'Visit 6, score 76' }));
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'Visit 6, score 100' }));
     expect(screen.getByText('Block decision')).toBeTruthy();
-    expect(container.querySelector('[class*="chartReadout"]')?.textContent).toContain('66 → 76');
+    expect(container.querySelector('[class*="chartReadout"]')?.textContent).toContain('58 → 100');
     fireEvent.mouseLeave(screen.getByRole('group', { name: /Risk journey/ }));
     expect(container.querySelector('[class*="chartReadout"]')?.textContent).toContain('Visit 1');
   });

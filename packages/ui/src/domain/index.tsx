@@ -95,9 +95,37 @@ export function BehaviorScrubber({ visit }: { visit: VisitVM }) {
   return <div className={styles.scrubber} aria-label={`Activity over ${formatDuration(visit.durationMs)}`}><div>{visit.activityBuckets.map((value, index) => <i key={index} data-level={Math.ceil(value * 3)} />)}</div><footer><span>0s</span><span>{formatDuration(visit.durationMs)}</span></footer></div>;
 }
 
-export function ScoreWaterfall({ visit, threshold }: { visit: VisitVM; threshold: number }) {
-  const end = visit.scoreAfter;
-  return <div className={styles.waterfall}><div className={styles.waterfallTotal}><span>Score before this visit</span><strong>{visit.scoreBefore}</strong></div>{visit.signals.length ? visit.signals.map((signal) => <SignalBar key={`${signal.id}-${signal.points}`} signal={signal} />) : <p className={styles.muted}>No score-changing signals on this visit.</p>}<div className={styles.waterfallTotal}><span>Score after this visit</span><strong>{end} {visit.scoreBefore < threshold && end >= threshold ? `◆ crossed ${threshold}` : ''}</strong></div><p className={styles.waterfallNote}>Signals are capped by category. Scores decay after seven inactive days.</p></div>;
+export function ScoreWaterfall({ visit, threshold, journey = [visit], initialScope = 'visit' }: { visit: VisitVM; threshold: number; journey?: VisitVM[]; initialScope?: 'visit' | 'journey' }) {
+  const [scope, setScope] = useState(initialScope);
+  const cumulative = new Map<string, { label: string; first: number; times: number; points: number; raw: number }>();
+  [...journey].sort((a, b) => a.startedAt.localeCompare(b.startedAt)).forEach((item, index) => item.scoreSteps.forEach((step) => {
+    const current = cumulative.get(step.signalId) ?? { label: step.label, first: index + 1, times: 0, points: 0, raw: 0 };
+    current.times += 1; current.points += step.points; current.raw += step.rawPoints ?? step.points;
+    cumulative.set(step.signalId, current);
+  }));
+  return <div className={styles.waterfall}>
+    <div role="group" aria-label="Score scope" className={styles.storyFilters}>
+      <button type="button" aria-pressed={scope === 'visit'} onClick={() => setScope('visit')}>This visit</button>
+      <button type="button" aria-pressed={scope === 'journey'} onClick={() => setScope('journey')}>Whole journey</button>
+    </div>
+    {scope === 'visit' ? <>
+      <div className={styles.waterfallTotal}><span>Score before this visit</span><strong>{visit.scoreBefore}</strong></div>
+      {visit.scoreSteps.length ? visit.scoreSteps.filter((step) => step.points !== 0 || step.reason === 'cap reached').map((step, index) =>
+        <div key={index} className={styles.scoreStep} data-lowers={step.points < 0}>
+          <span><strong>{step.label}</strong>{step.reason && <small>{step.reason}</small>}</span>
+          <b>{step.points >= 0 ? '+' : '−'}{Math.abs(step.points)}</b>
+          <i style={{ width: `${Math.min(100, Math.abs(step.points) * 3)}%` }} />
+        </div>
+      ) : <p className={styles.muted}>No score-changing signals on this visit.</p>}
+      <div className={styles.waterfallTotal}><span>Score after this visit</span><strong>{visit.scoreAfter} {visit.scoreBefore < threshold && visit.scoreAfter >= threshold ? `◆ crossed ${threshold}` : ''}</strong></div>
+    </> : <div className={styles.scoreTableScroll}><table className={styles.scoreTable} aria-label="Whole journey signal contributions">
+      <thead><tr><th>Signal</th><th>First visit #</th><th>Times triggered</th><th>Points counted</th></tr></thead>
+      <tbody>{[...cumulative].sort(([, a], [, b]) => Math.abs(b.points) - Math.abs(a.points)).map(([id, row]) =>
+        <tr key={id}><th scope="row">{row.label}</th><td>{row.first}</td><td>{row.times}</td><td>{row.points > 0 ? '+' : ''}{row.points}<small>{row.raw !== row.points ? `of ${row.raw > 0 ? '+' : ''}${row.raw} raw` : ''}</small></td></tr>
+      )}</tbody>
+    </table></div>}
+    <p className={styles.waterfallNote}>Signals are capped by category. Scores decay after seven inactive days.</p>
+  </div>;
 }
 
 export function platformName(platform?: Platform) { return platform ? platformLabel[platform] : ''; }

@@ -19,6 +19,14 @@ export interface EventVM {
   meta?: Record<string, string | number>;
 }
 
+export interface ScoreStep {
+  signalId: string;
+  label: string;
+  reason?: string;
+  points: number;
+  rawPoints?: number;
+}
+
 export interface VisitVM {
   id: string;
   startedAt: string;
@@ -41,6 +49,7 @@ export interface VisitVM {
   events: EventVM[];
   activityBuckets: number[];
   signals: SignalVM[];
+  scoreSteps: ScoreStep[];
   scoreBefore: number;
   scoreAfter: number;
   afterBlock: boolean;

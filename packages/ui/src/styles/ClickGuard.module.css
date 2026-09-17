@@ -281,6 +281,14 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .receipt { margin: var(--cg-space-0); }
 .receiptTotal { display: flex; justify-content: space-between; padding-top: var(--cg-space-3); border-top: 1px solid var(--cg-semantic-border-default); font-size: var(--cg-font-heading-md); font-weight: 600; }
 .receiptTotal dd { margin: var(--cg-space-0); }
+.scoreStep { position: relative; display: flex; justify-content: space-between; gap: var(--cg-space-3); padding: var(--cg-space-3) var(--cg-space-0); border-bottom: 1px solid var(--cg-semantic-border-default); }
+.scoreStep small, .scoreTable small { display: block; color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
+.scoreStep b { color: var(--cg-semantic-status-blocked-fg); font-variant-numeric: tabular-nums; }
+.scoreStep[data-lowers='true'] b { color: var(--cg-semantic-status-clean-fg); }
+.scoreStep > i { position: absolute; bottom: 0; height: var(--cg-space-1); background: var(--cg-semantic-border-strong); }
+.scoreTableScroll { overflow-x: auto; }
+.scoreTable { width: 100%; border-collapse: collapse; font-size: var(--cg-font-body-sm); }
+.scoreTable th, .scoreTable td { padding: var(--cg-space-2); text-align: left; border-bottom: 1px solid var(--cg-semantic-border-default); }
 .keyValue { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cg-space-3); padding: var(--cg-space-2) var(--cg-space-0); }
 .keyValue dt { color: var(--cg-semantic-text-secondary); }
 .keyValue dd { margin: var(--cg-space-0); text-align: right; overflow-wrap: anywhere; }

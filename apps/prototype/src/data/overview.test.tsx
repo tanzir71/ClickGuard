@@ -15,7 +15,7 @@ describe('account overview cards', () => {
     expect(sum(stats.wastedRows)).toBeCloseTo(stats.wasted, 8);
     expect(sum(stats.protectedRows)).toBeCloseTo(stats.protected, 8);
     expect(stats.visitors).toBe(160);
-    expect(stats.decisions).toBe(36);
+    expect(stats.decisions).toBe(visitorViewModels.filter((visitor) => ['blocked', 'pending', 'failed'].includes(visitor.status)).length);
     expect(stats.review).toBe(visitorViewModels.filter((visitor) => visitor.needsReview).length);
     expect(stats.wasted).toBeCloseTo(visitorViewModels.reduce((sum, visitor) => sum + visitor.wastedSpend, 0), 8);
     expect(stats.protected).toBeCloseTo(visitorViewModels.reduce((sum, visitor) => sum + visitor.protectedSpendEst, 0), 8);

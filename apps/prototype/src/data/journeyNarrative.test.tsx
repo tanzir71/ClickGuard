@@ -18,11 +18,11 @@ function JourneyHarness({ visitor = blocked }: { visitor?: VisitorVM }) {
 describe('story-led full journey', () => {
   it('derives the blocked story from actual visits without mutating input', () => {
     const story = buildJourneyNarrative({ ...blocked, visits: [...blocked.visits].reverse() });
-    expect(story.headline).toBe('A block decision after 6 paid visits.');
+    expect(story.headline).toBe('A block decision after 5 paid visits.');
     expect(story.chapters.map((chapter) => chapter.kind)).toEqual(['arrival', 'pattern', 'decision', 'after']);
-    expect(story.chapters[2].detail).toBe('Risk 66 → 76 · threshold 70');
+    expect(story.chapters[2].detail).toBe('Risk 58 → 100 · threshold 70');
     expect(story.chapters[3].detail).toBe('0 paid · 6 unpaid returns');
-    expect(story.noInteraction).toBe(12);
+    expect(story.noInteraction).toBe(3);
     expect(story.visits[0].id).toBe(blocked.visits[0].id);
   });
 
@@ -55,13 +55,13 @@ describe('story-led full journey', () => {
 
   it('links chapters, chart and visit list to the same visit and preserves evidence on demand', () => {
     render(<JourneyHarness />);
-    expect(screen.getByRole('heading', { name: 'A block decision after 6 paid visits.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'A block decision after 5 paid visits.' })).toBeTruthy();
     const evidence = screen.getByRole('button', { name: /Inspect the underlying evidence/ });
     expect(evidence.getAttribute('aria-expanded')).toBe('false');
     expect(screen.queryByRole('tabpanel')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Arrived via Google Ads. Inspect visit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Arrived via Direct traffic. Inspect visit' }));
     expect(screen.getByRole('article', { name: 'Visit 1 overview' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Visit 1, score 13' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Visit 1, score 34' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Block decision at visit 6. Inspect visit' }));
     expect(screen.getByRole('heading', { name: 'The visit that triggered a block decision' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Why this score?' }));
@@ -82,9 +82,9 @@ describe('story-led full journey', () => {
     expect(sequence.querySelectorAll('svg[class*="sequenceConnector"][aria-hidden="true"]')).toHaveLength(2);
     expect(within(sequence).queryByRole('button')).toBeNull();
     expect(stages[0].textContent).toContain('Click cost$4.10');
-    expect(stages[1].textContent).toContain('Bot probability95%');
+    expect(stages[1].textContent).toContain('Bot probability96%');
     expect(stages[2].textContent).toContain('Block decision');
-    expect(stages[2].textContent).toContain('Risk score66 to 76');
+    expect(stages[2].textContent).toContain('Risk score58 to 100');
     expect(stages[2].getAttribute('data-tone')).toBe('risk');
   });
 
