@@ -50,3 +50,5 @@ export const LiveDemo: Story = {};
 export const ProtectionPaused: Story = { args: { protectionMode: 'paused' } };
 export const EmptyAccount: Story = { args: { visitors: [] } };
 export const Inactive: Story = { args: { enabled: false } };
+export const Mobile: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
+export const Tablet: Story = { parameters: { viewport: { defaultViewport: 'tablet' } } };

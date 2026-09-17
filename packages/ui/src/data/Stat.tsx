@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import styles from '../styles/ClickGuard.module.css';
 
@@ -47,13 +47,24 @@ export function Stat({
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const open = Boolean(breakdown) && (hovered || focused) && !dismissed;
+  const [touchOpen, setTouchOpen] = useState(false);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const open = Boolean(breakdown) && (hovered || focused || touchOpen) && !dismissed;
+  useEffect(() => {
+    if (!touchOpen) return;
+    const close = (event: PointerEvent) => {
+      if (!shellRef.current?.contains(event.target as Node)) setTouchOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [touchOpen]);
   useEffect(() => {
     if (!open) return;
     const dismiss = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
         setDismissed(true);
+        setTouchOpen(false);
       }
     };
     document.addEventListener('keydown', dismiss, true);
@@ -101,6 +112,7 @@ export function Stat({
 
   return (
     <div
+      ref={shellRef}
       className={styles.statShell}
       data-open={open}
       onMouseEnter={() => {
@@ -133,6 +145,23 @@ export function Stat({
         <div className={classes} data-emphasized={emphasized || undefined}>
           {content}
         </div>
+      )}
+      {breakdown && (
+        <button
+          type="button"
+          className={styles.statInfo}
+          aria-label={`${label} breakdown`}
+          aria-expanded={open}
+          aria-controls={open ? tooltipId : undefined}
+          onClick={() => {
+            setHovered(false);
+            setFocused(false);
+            setDismissed(false);
+            setTouchOpen((current) => !current);
+          }}
+        >
+          <Info aria-hidden="true" />
+        </button>
       )}
       {open && breakdown && (
         <div className={styles.statPopoverAnchor}>

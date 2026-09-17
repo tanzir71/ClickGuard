@@ -54,6 +54,7 @@ import { FullJourney, type JourneyTab } from './FullJourney';
 import { AccountOverview } from './AccountOverview';
 import { ProtectionControl, ProtectionPausedBanner } from './ProtectionControl';
 import { useProtectionMode } from './useProtectionDemo';
+import { useCompactLayout } from './useCompactLayout';
 import { VisitorActions } from './VisitorActions';
 import { actionDescription, actionLabel, applyVisitorAction, hasBlock } from './visitorEnforcement';
 import styles from '../styles/ClickGuard.module.css';
@@ -97,6 +98,7 @@ export function ThreatMonitor({
   initialSimulation,
   onSimulationChange,
 }: ThreatMonitorProps) {
+  const compactLayout = useCompactLayout();
   const initial = useMemo(readUrl, []);
   const [visitors, setVisitors] = useState(initialVisitors);
   const [search, setSearch] = useState(initial.search);
@@ -283,7 +285,7 @@ export function ThreatMonitor({
 
   const onKeyboard = (event: KeyboardEvent<HTMLElement>) => {
     if (
-      (event.target as HTMLElement).closest('dialog') ||
+      (event.target as HTMLElement).closest('dialog, [role="dialog"]') ||
       (event.target as HTMLElement).matches('input, select, button, textarea')
     )
       return;
@@ -365,6 +367,35 @@ export function ThreatMonitor({
     setSimulation(value);
     onSimulationChange?.(value);
   };
+
+  const visitorPanel = selected ? (
+    <VisitorPanel
+      protectionPaused={protectionPaused}
+      visitor={selected}
+      onClose={() => setSelectedIp('')}
+      onPrevious={() =>
+        setSelectedIp(
+          sorted[Math.max(0, sorted.findIndex((visitor) => visitor.ip === selected.ip) - 1)]?.ip ??
+            selected.ip,
+        )
+      }
+      onNext={() =>
+        setSelectedIp(
+          sorted[Math.min(sorted.length - 1, sorted.findIndex((visitor) => visitor.ip === selected.ip) + 1)]
+            ?.ip ?? selected.ip,
+        )
+      }
+      onOpenJourney={(visitId) => {
+        if (visitId) setSelectedVisitId(visitId);
+        setJourneyOpen(true);
+      }}
+      onAction={(action) => (action ? requestAction(selected.ip, action) : setPendingAction(null))}
+      confirmAction={pendingAction?.ip === selected.ip ? pendingAction.action : null}
+      onConfirm={() => pendingAction?.ip === selected.ip && updateVisitor(selected.ip, pendingAction.action)}
+      selectedVisitId={selectedVisitId}
+      onSelectVisit={setSelectedVisitId}
+    />
+  ) : null;
 
   return (
     <div className={styles.app} onKeyDown={onKeyboard}>
@@ -611,6 +642,7 @@ export function ThreatMonitor({
                     )
                   }
                   sort={sort}
+                  onSort={setSort}
                   cycleSort={cycleSort}
                   onOpenJourney={(ip, visitId) => {
                     setSelectedIp(ip);
@@ -639,39 +671,18 @@ export function ThreatMonitor({
                 </footer>
               )}
             </section>
-            {selected && (
-              <VisitorPanel
-                protectionPaused={protectionPaused}
-                visitor={selected}
+            {compactLayout ? (
+              <Sheet
+                open={Boolean(selected) && !journeyOpen}
+                title={selected ? `Visitor ${selected.ip} details` : 'Visitor details'}
+                closeLabel="Close visitor details"
+                showCloseButton={false}
                 onClose={() => setSelectedIp('')}
-                onPrevious={() =>
-                  setSelectedIp(
-                    sorted[Math.max(0, sorted.findIndex((visitor) => visitor.ip === selected.ip) - 1)]?.ip ??
-                      selected.ip,
-                  )
-                }
-                onNext={() =>
-                  setSelectedIp(
-                    sorted[
-                      Math.min(
-                        sorted.length - 1,
-                        sorted.findIndex((visitor) => visitor.ip === selected.ip) + 1,
-                      )
-                    ]?.ip ?? selected.ip,
-                  )
-                }
-                onOpenJourney={(visitId) => {
-                  if (visitId) setSelectedVisitId(visitId);
-                  setJourneyOpen(true);
-                }}
-                onAction={(action) => (action ? requestAction(selected.ip, action) : setPendingAction(null))}
-                confirmAction={pendingAction?.ip === selected.ip ? pendingAction.action : null}
-                onConfirm={() =>
-                  pendingAction?.ip === selected.ip && updateVisitor(selected.ip, pendingAction.action)
-                }
-                selectedVisitId={selectedVisitId}
-                onSelectVisit={setSelectedVisitId}
-              />
+              >
+                {visitorPanel}
+              </Sheet>
+            ) : (
+              visitorPanel
             )}
           </div>
         </section>
@@ -761,6 +772,7 @@ function VisitorTable({
   onCheckAll,
   sort,
   cycleSort,
+  onSort,
   onOpenJourney,
   onAction,
 }: {
@@ -776,76 +788,110 @@ function VisitorTable({
   onCheckAll: () => void;
   sort: { key: SortKey; direction: SortDirection };
   cycleSort: (key: SortKey) => void;
+  onSort: (sort: { key: SortKey; direction: SortDirection }) => void;
   onOpenJourney: (ip: string, visitId?: string) => void;
   onAction: (ip: string, action: VisitorAction) => void;
 }) {
   return (
-    <DataTable>
-      <caption className={styles.journeyGuide}>
-        <span>
-          <b>Journeys</b> · risk 0–100 · first → last visit
-        </span>
-        <span>● Paid &nbsp; ○ Unpaid &nbsp; ◆ Block decision &nbsp; ▪ Conversion &nbsp; ┄ Threshold</span>
-        <span>Full history · hover or use ← → to explore</span>
-      </caption>
-      <thead>
-        <tr>
-          <th className={styles.checkboxCell}>
-            <Checkbox
-              label="Select all visible visitors"
-              checked={visitors.length > 0 && checked.size === visitors.length}
-              onChange={onCheckAll}
-            />
-          </th>
-          <th className={styles.expandCell}>
-            <span className={styles.srOnly}>Expand</span>
-          </th>
-          <th>
-            <SortHeader label="Visitor" sortKey="visitor" sort={sort} cycleSort={cycleSort} />
-          </th>
-          <th>
-            <SortHeader label="Status" sortKey="status" sort={sort} cycleSort={cycleSort} />
-          </th>
-          <th>
-            <SortHeader label="Risk" sortKey="risk" sort={sort} cycleSort={cycleSort} align="right" />
-          </th>
-          <th className={styles.secondaryColumn}>Top reason</th>
-          <th>
-            <SortHeader label="Journey" sortKey="visits" sort={sort} cycleSort={cycleSort} />
-          </th>
-          <th className={styles.secondaryColumn}>
-            <SortHeader label="Bot prob." sortKey="bot" sort={sort} cycleSort={cycleSort} align="right" />
-          </th>
-          <th className={styles.secondaryColumn}>
-            <SortHeader label="Wasted" sortKey="wasted" sort={sort} cycleSort={cycleSort} align="right" />
-          </th>
-          <th>
-            <SortHeader label="Seen" sortKey="seen" sort={sort} cycleSort={cycleSort} align="right" />
-          </th>
-          <th>
-            <span className={styles.srOnly}>Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {visitors.map((visitor) => (
-          <VisitorRow
-            key={visitor.ip}
-            protectionPaused={protectionPaused}
-            visitor={visitor}
-            query={query}
-            selected={selectedIp === visitor.ip}
-            expanded={expandedIp === visitor.ip}
-            checked={checked.has(visitor.ip)}
-            onOpen={onOpen}
-            onExpand={onExpand}
-            onCheck={onCheck}
-            onOpenJourney={onOpenJourney}
-            onAction={onAction}
+    <>
+      <div className={styles.compactTableControls} aria-label="Compact visitor controls">
+        <Stack direction="row" gap="1">
+          <Checkbox
+            label="Select all visitors"
+            checked={visitors.length > 0 && checked.size === visitors.length}
+            onChange={onCheckAll}
           />
-        ))}
-      </tbody>
-    </DataTable>
+          <span aria-hidden="true">Select all</span>
+        </Stack>
+        <label className={styles.selectFilter}>
+          <span>Sort</span>
+          <select
+            aria-label="Sort visitors"
+            value={`${sort.key}:${sort.direction}`}
+            onChange={(event) => {
+              const [key, direction] = event.target.value.split(':');
+              onSort({ key: key as SortKey, direction: direction as SortDirection });
+            }}
+          >
+            {(
+              ['priority', 'visitor', 'status', 'risk', 'visits', 'bot', 'wasted', 'seen'] as SortKey[]
+            ).flatMap((key) =>
+              (['desc', 'asc'] as SortDirection[]).map((direction) => (
+                <option key={`${key}:${direction}`} value={`${key}:${direction}`}>
+                  {key} · {direction === 'desc' ? 'descending' : 'ascending'}
+                </option>
+              )),
+            )}
+          </select>
+        </label>
+      </div>
+      <DataTable compactCards>
+        <caption className={styles.journeyGuide}>
+          <span>
+            <b>Journeys</b> · risk 0–100 · first → last visit
+          </span>
+          <span>● Paid &nbsp; ○ Unpaid &nbsp; ◆ Block decision &nbsp; ▪ Conversion &nbsp; ┄ Threshold</span>
+          <span>Full history · hover or use ← → to explore</span>
+        </caption>
+        <thead>
+          <tr>
+            <th className={styles.checkboxCell}>
+              <Checkbox
+                label="Select all visible visitors"
+                checked={visitors.length > 0 && checked.size === visitors.length}
+                onChange={onCheckAll}
+              />
+            </th>
+            <th className={styles.expandCell}>
+              <span className={styles.srOnly}>Expand</span>
+            </th>
+            <th>
+              <SortHeader label="Visitor" sortKey="visitor" sort={sort} cycleSort={cycleSort} />
+            </th>
+            <th>
+              <SortHeader label="Status" sortKey="status" sort={sort} cycleSort={cycleSort} />
+            </th>
+            <th>
+              <SortHeader label="Risk" sortKey="risk" sort={sort} cycleSort={cycleSort} align="right" />
+            </th>
+            <th className={styles.secondaryColumn}>Top reason</th>
+            <th>
+              <SortHeader label="Journey" sortKey="visits" sort={sort} cycleSort={cycleSort} />
+            </th>
+            <th className={styles.secondaryColumn}>
+              <SortHeader label="Bot prob." sortKey="bot" sort={sort} cycleSort={cycleSort} align="right" />
+            </th>
+            <th className={styles.secondaryColumn}>
+              <SortHeader label="Wasted" sortKey="wasted" sort={sort} cycleSort={cycleSort} align="right" />
+            </th>
+            <th>
+              <SortHeader label="Seen" sortKey="seen" sort={sort} cycleSort={cycleSort} align="right" />
+            </th>
+            <th>
+              <span className={styles.srOnly}>Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {visitors.map((visitor) => (
+            <VisitorRow
+              key={visitor.ip}
+              protectionPaused={protectionPaused}
+              visitor={visitor}
+              query={query}
+              selected={selectedIp === visitor.ip}
+              expanded={expandedIp === visitor.ip}
+              checked={checked.has(visitor.ip)}
+              onOpen={onOpen}
+              onExpand={onExpand}
+              onCheck={onCheck}
+              onOpenJourney={onOpenJourney}
+              onAction={onAction}
+            />
+          ))}
+        </tbody>
+      </DataTable>
+    </>
   );
 }
 
@@ -1184,10 +1230,18 @@ function VisitorPanel({
   onSelectVisit: (id: string) => void;
 }) {
   const confirmationRef = useRef<HTMLDivElement>(null);
+  const compactLayout = useCompactLayout();
   useEffect(() => {
     if (confirmAction) confirmationRef.current?.querySelector('button')?.focus();
   }, [confirmAction, visitor.ip]);
   const related = visitor.related;
+  const verdict = (
+    <VerdictCard
+      status={visitor.status}
+      sentence={visitor.verdict}
+      meta={`${visitor.manualAction?.user ?? visitor.decisionBy ?? 'Auto'} · ${visitor.riskScore}`}
+    />
+  );
   const hasRelated =
     related &&
     [
@@ -1242,13 +1296,10 @@ function VisitorPanel({
             <X />
           </IconButton>
         </Stack>
-        <VerdictCard
-          status={visitor.status}
-          sentence={visitor.verdict}
-          meta={`${visitor.manualAction?.user ?? visitor.decisionBy ?? 'Auto'} · ${visitor.riskScore}`}
-        />
+        {!compactLayout && verdict}
       </header>
       <div className={styles.panelBody}>
+        {compactLayout && <div className={styles.compactVerdict}>{verdict}</div>}
         <PanelSection
           label={
             visitor.manualAction

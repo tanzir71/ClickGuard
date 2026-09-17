@@ -43,6 +43,7 @@ import {
 import { Button, IconButton, Stack, Tabs } from '../primitives';
 import { VisitSequence } from './VisitSequence';
 import { VisitorActions } from './VisitorActions';
+import { useCompactLayout } from './useCompactLayout';
 import styles from '../styles/ClickGuard.module.css';
 
 export type JourneyTab = 'events' | 'score' | 'device';
@@ -173,6 +174,7 @@ export function FullJourney({
   onAction: (action: VisitorAction) => void;
 }) {
   const [filter, setFilter] = useState<VisitFilter>('all');
+  const compactLayout = useCompactLayout();
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const detailRef = useRef<HTMLElement>(null);
   const streamRef = useRef<HTMLElement>(null);
@@ -201,7 +203,7 @@ export function FullJourney({
   const selectVisit = (id: string, reveal = false) => {
     setSelectedVisitId(id);
     if (id === visitor.blockedAtVisitId) setTab('score');
-    if (reveal) detailRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    if (reveal || compactLayout) detailRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   };
   const openEvidence = (nextTab: JourneyTab) => {
     pendingEvidenceScroll.current = true;

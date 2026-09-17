@@ -1,5 +1,7 @@
 import {
   forwardRef,
+  useEffect,
+  useRef,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
   type InputHTMLAttributes,
@@ -212,21 +214,79 @@ export function Sheet({
   title,
   onClose,
   children,
+  closeLabel = 'Close full journey',
+  showCloseButton = true,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
+  closeLabel?: string;
+  showCloseButton?: boolean;
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    if (!dialogRef.current?.contains(document.activeElement))
+      dialogRef.current?.focus({ preventScroll: true });
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      const restoreTarget =
+        previousFocus?.closest('details:not([open])')?.querySelector('summary') ?? previousFocus;
+      if (restoreTarget?.isConnected) restoreTarget.focus({ preventScroll: true });
+    };
+  }, [open]);
   if (!open) return null;
   return (
     <div className={styles.sheetLayer} role="presentation">
-      <button className={styles.scrim} aria-label="Close full journey" onClick={onClose} />
-      <section className={styles.sheet} role="dialog" aria-modal="true" aria-label={title}>
+      <button className={styles.scrim} aria-label={closeLabel} onClick={onClose} tabIndex={-1} />
+      <section
+        ref={dialogRef}
+        className={styles.sheet}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            event.preventDefault();
+            onClose();
+          }
+          if (event.key === 'Tab') {
+            const controls = [
+              ...event.currentTarget.querySelectorAll<HTMLElement>(
+                'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), summary, [tabindex="0"]',
+              ),
+            ].filter((element) => element.getClientRects().length > 0);
+            const first = controls[0];
+            const last = controls.at(-1);
+            if (!first) event.preventDefault();
+            else if (
+              event.shiftKey &&
+              (document.activeElement === first || document.activeElement === event.currentTarget)
+            ) {
+              event.preventDefault();
+              last?.focus();
+            } else if (
+              !event.shiftKey &&
+              (document.activeElement === last || document.activeElement === event.currentTarget)
+            ) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        }}
+      >
         {children}
-        <IconButton label="Close full journey" className={styles.sheetClose} onClick={onClose}>
-          <X />
-        </IconButton>
+        {showCloseButton && (
+          <IconButton label={closeLabel} className={styles.sheetClose} onClick={onClose}>
+            <X />
+          </IconButton>
+        )}
       </section>
     </div>
   );

@@ -14,7 +14,7 @@ html {
 
 body {
   margin: var(--cg-space-0);
-  min-width: 64rem;
+  min-width: 0;
   min-height: 100vh;
 }
 

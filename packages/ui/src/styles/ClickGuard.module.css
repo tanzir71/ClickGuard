@@ -4221,6 +4221,672 @@ button.stat:focus-visible {
   }
 }
 
+.compactTableControls,
+.statInfo {
+  display: none;
+}
+
+@media (max-width: 64rem) {
+  .appHeader {
+    gap: var(--cg-space-3);
+    padding-inline: var(--cg-space-4);
+  }
+
+  .appHeader nav a {
+    padding-inline: var(--cg-space-2);
+  }
+
+  .pageIntro,
+  .viewBar,
+  .filterBar,
+  .batchBar {
+    flex-wrap: wrap;
+    gap: var(--cg-space-3);
+  }
+
+  .pageIntro > .stack {
+    flex-shrink: 0;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(3, minmax(0, var(--cg-size-overview-card)));
+  }
+
+  .statsGrid .statValueLine {
+    flex-wrap: wrap;
+  }
+
+  .filterBar .inputWrap {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .savedViews {
+    flex-wrap: wrap;
+  }
+
+  .sheetHeader {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .sheetHeader > .stack {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+
+  .storyOverview,
+  .storyInvestigation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .storyStream {
+    position: relative;
+    top: auto;
+    max-height: 22rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--cg-semantic-border-default);
+  }
+
+  .storyDetail {
+    scroll-margin-top: 11rem;
+  }
+
+  .statsGrid .statShell .statPopoverAnchor {
+    right: auto;
+    left: 0;
+    max-width: calc(100vw - var(--cg-space-8));
+  }
+
+  .statsGrid .statShell:nth-child(3n) .statPopoverAnchor {
+    right: 0;
+    left: auto;
+  }
+}
+
+@media (max-width: 48rem), (max-height: 32rem) and (max-width: 64rem) {
+  .appHeader {
+    height: auto;
+    flex-wrap: wrap;
+    gap: var(--cg-space-2);
+    padding-top: var(--cg-space-2);
+  }
+
+  .appHeader nav {
+    order: 4;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    min-height: 2.75rem;
+  }
+
+  .appHeader nav a {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .account {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    justify-content: flex-end;
+    font-size: var(--cg-font-body-sm);
+  }
+
+  .brand,
+  .avatar,
+  .account svg {
+    flex-shrink: 0;
+  }
+
+  .avatar {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .main {
+    padding: var(--cg-space-5) var(--cg-space-4) var(--cg-space-12);
+  }
+
+  .pageIntro > .stack {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pageIntro h1 {
+    font-size: var(--cg-font-heading-lg);
+  }
+
+  .sheet {
+    width: 100%;
+    height: 100dvh;
+    overscroll-behavior: contain;
+  }
+
+  .sheet .visitorPanel {
+    position: relative;
+    top: 0;
+    width: 100%;
+    min-width: 0;
+    height: 100dvh;
+    border-left: 0;
+    animation: none;
+  }
+
+  .panelHeader {
+    padding: var(--cg-space-3);
+  }
+
+  .panelHeader > div:first-child {
+    padding-right: 6rem;
+  }
+
+  .panelHeader h2 {
+    font-size: var(--cg-font-heading-md);
+    overflow-wrap: anywhere;
+  }
+
+  .panelHeader > .stack {
+    top: var(--cg-space-2);
+    right: var(--cg-space-2);
+    gap: 0;
+  }
+
+  .panelFooter {
+    padding: var(--cg-space-3);
+    padding-bottom: max(var(--cg-space-3), env(safe-area-inset-bottom));
+  }
+
+  .panelFooter .button {
+    min-height: 2.75rem;
+  }
+
+  .sheetHeader {
+    padding: var(--cg-space-3);
+  }
+
+  .sheetHeader > .journeyIdentity {
+    padding-right: var(--cg-space-8);
+  }
+
+  .compactVerdict {
+    padding: 0 var(--cg-space-3) var(--cg-space-3);
+  }
+
+  .sheetHeader h2 {
+    font-size: var(--cg-font-heading-md);
+    overflow-wrap: anywhere;
+  }
+
+  .sheetHeader > .stack {
+    gap: var(--cg-space-2);
+  }
+
+  .sheetHeader > .stack > .button {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+
+  .journeySynopsis,
+  .storyOverview,
+  .storyDetail {
+    padding-inline: var(--cg-space-4);
+  }
+
+  .journeyTotals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .journeyTotals > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .episodeHeader > div,
+  .recordedActivity header,
+  .tableFooter,
+  .activityFunnelHeader,
+  .activityFunnelHeader > div {
+    flex-wrap: wrap;
+  }
+
+  .outageBanner {
+    align-items: flex-start;
+  }
+
+  .outageBanner svg,
+  .outageBanner button {
+    flex-shrink: 0;
+  }
+
+  .toast {
+    inset: var(--cg-space-3) var(--cg-space-3) auto;
+    min-width: 0;
+    gap: var(--cg-space-3);
+    overflow-wrap: anywhere;
+  }
+
+  .toast button {
+    flex: none;
+    min-height: 2.75rem;
+  }
+
+  .emptyState {
+    min-height: 20rem;
+    padding: var(--cg-space-5);
+  }
+
+  .deviceGrid,
+  .evidenceDisclosure .deviceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-height: 32rem) and (max-width: 64rem) {
+  .sheet .visitorPanel {
+    display: block;
+    overflow-y: auto;
+  }
+
+  .sheet .panelBody {
+    overflow-y: visible;
+  }
+
+  .sheetHeader {
+    position: relative;
+  }
+}
+
+@media (max-width: 40rem) {
+  .main {
+    padding-inline: var(--cg-space-3);
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statsGrid > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .statsGrid .stat {
+    padding: var(--cg-space-3);
+    min-height: 8rem;
+  }
+
+  .statHeader {
+    gap: var(--cg-space-1);
+  }
+
+  .statValueLine {
+    gap: var(--cg-space-1);
+  }
+
+  .statsGrid .statShell .statPopoverAnchor {
+    right: auto;
+    left: 0;
+    width: min(20rem, calc(100vw - var(--cg-space-8)));
+  }
+
+  .statsGrid .statShell:nth-child(even) .statPopoverAnchor {
+    right: 0;
+    left: auto;
+  }
+
+  .statsTitle,
+  .statsControls {
+    flex-wrap: wrap;
+    gap: var(--cg-space-2);
+  }
+
+  .filterBar,
+  .batchBar {
+    gap: var(--cg-space-2);
+  }
+
+  .filterBar .inputWrap {
+    min-width: 0;
+  }
+
+  .selectFilter {
+    max-width: 100%;
+    padding-inline: var(--cg-space-2);
+  }
+
+  .selectFilter select {
+    min-width: 0;
+  }
+
+  .activityFunnel {
+    padding-inline: var(--cg-space-3);
+  }
+
+  .activityFunnelHeader,
+  .activityFunnelHeader > div {
+    gap: var(--cg-space-1) var(--cg-space-2);
+  }
+
+  .activityFunnelValue {
+    gap: 0;
+  }
+
+  .activityFunnelValue strong {
+    font-size: var(--cg-font-body-sm);
+  }
+
+  .activityFunnelValue small {
+    display: none;
+  }
+
+  .activityFunnelStep {
+    font-size: 0.625rem;
+    line-height: 1rem;
+    white-space: normal;
+  }
+
+  .activityFunnelStageButton {
+    padding-inline: 0;
+  }
+
+  .activityFunnelTrack {
+    margin-left: 2rem;
+    margin-right: 0;
+  }
+
+  .activityFunnelPlot {
+    left: 2rem;
+    width: calc(100% - 2rem);
+  }
+
+  .activityFunnelFooter {
+    flex-wrap: wrap;
+    gap: var(--cg-space-1);
+  }
+
+  .activityFunnelStage .activityFunnelTooltip,
+  .activityFunnelStage:first-child .activityFunnelTooltip,
+  .activityFunnelStage:last-child .activityFunnelTooltip {
+    width: min(17rem, calc(100vw - 6rem));
+    max-width: none;
+  }
+
+  .activityFunnelStage:first-child .activityFunnelTooltip {
+    left: 0;
+    transform: none;
+  }
+
+  .activityFunnelStage:nth-child(2) .activityFunnelTooltip {
+    left: 0;
+    transform: translateX(-20%);
+  }
+
+  .activityFunnelStage:nth-last-child(2) .activityFunnelTooltip {
+    right: 0;
+    left: auto;
+    transform: translateX(20%);
+  }
+
+  .activityFunnelStage:last-child .activityFunnelTooltip {
+    right: 0;
+    left: auto;
+    transform: none;
+  }
+
+  .compactTableControls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--cg-space-2);
+    padding: var(--cg-space-3);
+  }
+
+  .compactTableControls select {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+  }
+
+  .compactTableControls > .stack {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .compactTableControls > .selectFilter {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cardTableScroller {
+    overflow: visible;
+  }
+
+  .cardTable,
+  .cardTable > tbody,
+  .cardTable > caption {
+    display: block;
+  }
+
+  .cardTable > thead {
+    display: none;
+  }
+
+  .cardTable > tbody > tr:not(.expandedRow) {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) 2.75rem;
+    gap: var(--cg-space-3) var(--cg-space-2);
+    margin: var(--cg-space-3);
+    padding: var(--cg-space-3);
+    border: 1px solid var(--cg-semantic-border-default);
+    border-radius: var(--cg-radius-lg);
+    background: var(--cg-semantic-bg-surface);
+  }
+
+  .cardTable > tbody > tr.rowSelected,
+  .cardTable > tbody > tr.rowChecked {
+    background: var(--cg-semantic-bg-selected);
+    border-color: var(--cg-semantic-accent);
+  }
+
+  .cardTable > tbody > tr > td {
+    display: block;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .cardTable > tbody > tr:hover > td,
+  .cardTable > tbody > tr.rowSelected > td,
+  .cardTable > tbody > tr.rowChecked > td {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(1) {
+    grid-area: 1 / 1;
+    align-self: start;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(2) {
+    grid-area: 4 / 1;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(3) {
+    grid-area: 1 / 2;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(4) {
+    grid-area: 2 / 1 / 3 / -1;
+    padding-right: 6.5rem;
+    align-self: center;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(5) {
+    grid-area: 2 / 2 / 3 / -1;
+    justify-self: end;
+    width: 6rem;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(7) {
+    grid-area: 3 / 1 / 4 / -1;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(10) {
+    grid-area: 4 / 2 / 5 / -1;
+    text-align: left;
+    align-self: center;
+  }
+
+  .cardTable > tbody > tr > td:nth-child(11) {
+    grid-area: 1 / 3;
+    align-self: start;
+  }
+
+  .cardTable > tbody > tr > .secondaryColumn {
+    display: none;
+  }
+
+  .cardTable .visitorCell > div {
+    flex-wrap: wrap;
+  }
+
+  .cardTable .visitorCell > small {
+    display: block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .cardTable .statusPill {
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+
+  .cardTable .riskScore {
+    min-width: 0;
+    grid-template-columns: auto minmax(2rem, 1fr);
+  }
+
+  .cardTable .menuTrigger {
+    min-height: 2.75rem;
+    display: grid;
+    place-items: center;
+  }
+
+  .cardTable .expandedRow {
+    display: block;
+    max-width: 100%;
+  }
+
+  .expandedContent {
+    max-width: 100%;
+    padding: var(--cg-space-2);
+    overflow-x: auto;
+  }
+
+  .expandedContent > header,
+  .expandedContent > button {
+    min-width: 52rem;
+  }
+
+  .visitSequence {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    gap: var(--cg-space-8);
+  }
+
+  .visitSequence > li {
+    grid-template-rows: auto auto auto;
+    grid-row: auto;
+  }
+
+  .sequenceConnector {
+    top: auto;
+    bottom: calc(var(--cg-space-8) * -1);
+    right: calc(50% - var(--cg-space-4));
+    width: var(--cg-space-8);
+    transform: rotate(90deg) translateX(-25%);
+  }
+
+  .recordedRail {
+    flex-wrap: wrap;
+  }
+
+  .recordedRail li {
+    flex-basis: calc(50% - var(--cg-space-3));
+  }
+
+  .evidenceDisclosure .officialSignals,
+  .signalGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .exclusionRow {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+  }
+
+  .exclusionRow > span:last-child {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .keyValue {
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .keyValue dd {
+    max-width: 100%;
+  }
+
+  .menuContent button,
+  .savedViews button,
+  .selectFilter,
+  .tabs button,
+  .storyFilters button {
+    min-height: 2.75rem;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tabs button {
+    flex-shrink: 0;
+  }
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 40rem) {
+  .statInfo {
+    position: absolute;
+    top: var(--cg-space-2);
+    right: var(--cg-space-2);
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    border-radius: var(--cg-radius-md);
+    background: var(--cg-semantic-bg-selected);
+    color: var(--cg-semantic-accent);
+    cursor: pointer;
+  }
+
+  .statInfo svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .statIcon {
+    visibility: hidden;
+  }
+
+  .textInput,
+  .selectFilter select {
+    font-size: 1rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

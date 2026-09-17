@@ -66,6 +66,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const BlockedJourney: Story = {};
+export const MobileJourney: Story = { parameters: { viewport: { defaultViewport: 'mobile1' } } };
 export const FailedExclusion: Story = {
   args: {
     visitor: {

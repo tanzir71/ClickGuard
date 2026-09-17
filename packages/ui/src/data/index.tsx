@@ -263,13 +263,15 @@ export function EmptyState({
 export function DataTable({
   children,
   label = 'Threat monitoring results',
+  compactCards = false,
 }: {
   children: ReactNode;
   label?: string;
+  compactCards?: boolean;
 }) {
   return (
-    <div className={styles.tableScroller}>
-      <table className={styles.dataTable} aria-label={label}>
+    <div className={`${styles.tableScroller} ${compactCards ? styles.cardTableScroller : ''}`}>
+      <table className={`${styles.dataTable} ${compactCards ? styles.cardTable : ''}`} aria-label={label}>
         {children}
       </table>
     </div>
