@@ -85,9 +85,9 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .activityFunnelStage[data-tone='warning'] .activityFunnelStep i { color: var(--cg-semantic-status-monitoring-fg); border-color: var(--cg-semantic-status-monitoring-fg); }
 .activityFunnelStage[data-tone='danger'] .activityFunnelStep i { color: var(--cg-semantic-status-blocked-fg); border-color: var(--cg-semantic-status-blocked-fg); }
 .activityFunnelStageButton:hover .activityFunnelStep, .activityFunnelStageButton:focus-visible .activityFunnelStep { text-decoration: underline; text-underline-offset: 3px; }
-.activityFunnelTooltip { position: absolute; top: 100%; left: 0; z-index: 12; display: grid; gap: var(--cg-space-2); width: 17rem; padding: var(--cg-space-3); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-md); background: var(--cg-semantic-bg-surface); color: var(--cg-semantic-text-secondary); box-shadow: var(--cg-shadow-md); font-size: var(--cg-font-body-sm); }
+.activityFunnelTooltip { position: absolute; top: 100%; left: 50%; z-index: 12; display: grid; gap: var(--cg-space-2); width: 17rem; padding: var(--cg-space-3); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-md); background: var(--cg-semantic-bg-surface); color: var(--cg-semantic-text-secondary); box-shadow: var(--cg-shadow-md); font-size: var(--cg-font-body-sm); transform: translateX(-50%); }
 .activityFunnelTooltip strong { color: var(--cg-semantic-text-primary); font-weight: 600; }
-.activityFunnelStage:nth-last-child(-n+2) .activityFunnelTooltip { right: 0; left: auto; }
+.activityFunnelStage:first-child .activityFunnelTooltip, .activityFunnelStage:last-child .activityFunnelTooltip { max-width: calc(100% + var(--cg-space-6)); }
 .activityFunnelFooter { display: flex; justify-content: space-between; gap: var(--cg-space-3); margin-top: var(--cg-space-2); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-mono-sm); }
 .resultsGroup { background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-lg); }
 .resultsGroup > .viewBar { border: 0; }

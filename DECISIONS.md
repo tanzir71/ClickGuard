@@ -1,5 +1,7 @@
 # Implementation decisions
 
+- **2026-09-17 · Funnel tooltip alignment:** Center stage detail popups on the triggering stage label instead of aligning to alternating cell edges. First/last popups may narrow to stay inside the results frame while retaining the same center; hover, keyboard focus, and Escape dismissal are unchanged.
+
 - **2026-09-17 · Visit-flow refinement:** Replaced the tiny text-arrow gaps with full-width SVG connectors on a shared stage-header axis. Numbered icon headers, calmer card borders, and aligned metric footers make arrival → behavior → result scan as one flow. Outcome color remains semantic without a harsh outline; connectors are decorative, not controls. All values and evidence remain record-derived.
 
 - **2026-09-17 · Sharp journey steps:** Table, panel, and expanded risk charts share an orthogonal step connector with miter joins. Following endpoint-placement feedback, each riser now ends at its visit marker instead of halfway between visits. Marker time/score positions, score-before values, and decision/post-decision segments are preserved; the connector is illustrative between recorded visits, not a claim of intermediate measurements.
