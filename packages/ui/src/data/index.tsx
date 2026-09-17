@@ -7,6 +7,7 @@ export type { ActivityFunnelStage } from './activityFunnel';
 export { formatFunnelPercent, getActivityFunnelStages, getFunnelMetrics, getFunnelProfile } from './activityFunnel';
 export { Stat, type StatTone, type StatBreakdown, type StatBreakdownRow } from './Stat';
 export { getOverviewMetrics } from './overview';
+export { getLiveOverviewMetrics, OVERVIEW_DEMO_BATCHES } from './liveOverview';
 
 export function ActivityFunnel({ stages, filtered, total, rangeLabel }: { stages: ActivityFunnelStage[]; filtered: number; total: number; rangeLabel: string }) {
   const headingId = useId();

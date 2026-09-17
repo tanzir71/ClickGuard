@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
-import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Download, Filter, Search, Shield, ShieldBan, ShieldCheck, ScanEye, Users, Wallet, X } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Download, Filter, Search, Shield, X } from 'lucide-react';
 import type { Platform, ThreatMonitorProps, VisitVM, VisitorStatus, VisitorVM } from '../model';
-import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows, Stat } from '../data';
+import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows } from '../data';
 import { getActivityFunnelStages } from '../data/activityFunnel';
-import { getOverviewMetrics } from '../data/overview';
 import { DecisionRoute, ExclusionList, RiskChart, RiskScore, SignalBar, SignalMeter, SourceTag, SpendReceipt, StatusPill, VerdictCard, VisitRibbon, formatDuration, platformName, shortTime } from '../domain';
 import { Button, Checkbox, IconButton, Menu, SegmentedControl, Sheet, Stack, TextInput, Toast } from '../primitives';
 import { FullJourney, type JourneyTab } from './FullJourney';
+import { AccountOverview } from './AccountOverview';
 import styles from '../styles/ClickGuard.module.css';
 
 type ViewMode = 'visitors' | 'visits';
@@ -16,6 +16,7 @@ type SortDirection = 'asc' | 'desc';
 type Simulation = 'normal' | 'empty' | 'error' | 'slow';
 
 const statusRank: Record<VisitorStatus, number> = { failed: 6, pending: 5, blocked: 4, monitoring: 3, allowed: 2, clean: 1 };
+const emptyVisitors: VisitorVM[] = [];
 
 function readUrl() {
   const params = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search);
@@ -108,7 +109,6 @@ export function ThreatMonitor({ visitors: initialVisitors, now, initialSimulatio
   }), [filtered, sort]);
 
   const allVisits = useMemo(() => sorted.flatMap((visitor) => visitor.visits.map((visit) => ({ visitor, visit }))).sort((a, b) => b.visit.startedAt.localeCompare(a.visit.startedAt)), [sorted]);
-  const stats = useMemo(() => getOverviewMetrics(visitors), [visitors]);
 
   const activeFilters = (search ? 1 : 0) + (status !== 'all' ? 1 : 0) + (paidOnly ? 1 : 0) + (platform !== 'all' ? 1 : 0) + (risk !== 'all' ? 1 : 0);
   const clearFilters = () => { setSearch(''); setStatus('all'); setPaidOnly(false); setPlatform('all'); setRisk('all'); setSavedView('all'); };
@@ -146,16 +146,7 @@ export function ThreatMonitor({ visitors: initialVisitors, now, initialSimulatio
     <header className={styles.appHeader}><a className={styles.brand} href="#top" aria-label="ClickGuard home"><Shield /><strong>ClickGuard</strong></a><nav aria-label="Primary"><a href="#dashboard">Dashboard</a><a className={styles.navActive} href="#threats">Threat Monitoring</a><a href="#rules">Rules</a><a href="#reports">Reports</a></nav><button type="button" className={styles.account}>acme-shoes.com <ChevronDown /></button><span className={styles.avatar}>T</span></header>
     <main id="top" className={styles.main}>
       <section className={styles.pageIntro}><div><span className={styles.eyebrow}>Traffic protection</span><h1>Threat Monitoring</h1><p>Every visitor we evaluated, and why we did or didn’t block them.</p></div><Stack direction="row" gap="2"><Button iconStart={<Download />} onClick={() => exportCsv(sorted)}>Export CSV</Button><Menu label={rangeDays === 1 ? 'Last 24 hours' : `Last ${rangeDays} days`}><button type="button" onClick={() => setRangeDays(1)}>Last 24 hours {rangeDays === 1 ? '✓' : ''}</button><button type="button" onClick={() => setRangeDays(7)}>Last 7 days {rangeDays === 7 ? '✓' : ''}</button><button type="button" onClick={() => setRangeDays(30)}>Last 30 days {rangeDays === 30 ? '✓' : ''}</button></Menu></Stack></section>
-      <section className={styles.statsOverview} aria-label="Threat monitoring summary">
-        <header className={styles.statsHeading}><h2>Account overview</h2><span>All tracked traffic · Hover for breakdowns</span></header>
-        <div className={styles.statsGrid}>
-          <Stat label="Visitors" value={stats.visitors.toLocaleString()} caption={`${stats.paid.toLocaleString()} with paid traffic`} icon={<Users />} actionLabel="View all visitors" onClick={() => clearFilters()} breakdown={{ title: 'Visitor mix', rows: stats.trafficRows, note: 'Each visitor is counted once. Paid includes visitors with both paid and unpaid visits.', scope: 'All recorded visits · independent of table filters' }} />
-          <Stat label="Block decisions" value={stats.decisions.toLocaleString()} caption={`${stats.blocked} blocked · ${stats.pending + stats.failed} unresolved`} tone="danger" icon={<ShieldBan />} actionLabel="View block decisions" onClick={() => { clearFilters(); setSavedView('blocked'); }} breakdown={{ title: 'Block outcomes', rows: stats.decisionRows, note: 'Pending and failed exclusions are decisions, not confirmed blocks on every platform.', scope: 'Current status · all tracked visitors' }} />
-          <Stat label="Needs review" value={stats.review.toLocaleString()} caption="visitors in your review queue" tone="warning" icon={<ScanEye />} actionLabel="Open review queue" onClick={() => { clearFilters(); setSavedView('review'); }} breakdown={{ title: 'Review queue', rows: stats.reviewRows, note: 'Includes monitoring, failed exclusions, and recent blocks flagged for review. Marking reviewed removes the visitor from this queue.', scope: 'Current review flags · all tracked visitors' }} />
-          <Stat label="Wasted spend" value={`$${Math.round(stats.wasted).toLocaleString()}`} caption="recorded pre-block click cost" tone="danger" icon={<Wallet />} actionLabel="View visitors with spend over $20" onClick={() => { clearFilters(); setSavedView('wasted'); }} breakdown={{ title: 'Click cost by visitor status', rows: stats.wastedRows, note: 'The prototype sums paid clicks before a block, or all paid clicks if no block exists. This is not a confirmed fraud-loss total.', scope: 'All recorded visits · USD · headline rounded' }} />
-          <Stat label="Protected" value={`~$${Math.round(stats.protected).toLocaleString()}`} caption="estimated prevented spend" tone="success" icon={<ShieldCheck />} breakdown={{ title: 'Estimated protection by network', rows: stats.protectedRows, note: 'Demo estimate: 2.05× pre-block spend, capped at $280 per blocked visitor when data was generated. Not measured savings or recovered revenue.', scope: 'All recorded activity · USD · headline rounded' }} />
-        </div>
-      </section>
+      <AccountOverview key={simulation} visitors={simulation === 'empty' ? emptyVisitors : visitors} enabled={simulation !== 'error' && !loading} onView={(view) => { clearFilters(); setSavedView(view); }} />
       <section className={styles.resultsGroup} aria-label="Traffic results">
       <section className={styles.viewBar}><SegmentedControl label="Result type" value={viewMode} onChange={setViewMode} options={[{ value: 'visitors', label: 'Visitors' }, { value: 'visits', label: 'Visits' }]} /><div className={styles.savedViews} role="group" aria-label="Saved views">{([['all', 'All visitors'], ['review', 'Needs review'], ['blocked', 'Blocked'], ['wasted', 'Wasted > $20'], ['shared', 'Shared IPs']] as Array<[SavedView, string]>).map(([value, label]) => <button type="button" key={value} aria-pressed={savedView === value} onClick={() => setSavedView(value)}>{label}</button>)}</div></section>
       {checked.size ? <BatchBar count={checked.size} onClear={() => setChecked(new Set())}><Button size="sm" variant="danger" onClick={() => batchAction('block')}>Block now</Button><Button size="sm" onClick={() => batchAction('allow')}>Always allow</Button><Button size="sm" onClick={() => batchAction('review')}>Mark reviewed</Button></BatchBar> : <section className={styles.filterBar} aria-label="Filters"><TextInput ref={searchRef} icon={<Search />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search IP, network, city, campaign, click ID…" aria-label="Search visitors" />

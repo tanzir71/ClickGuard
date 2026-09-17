@@ -1,5 +1,7 @@
 # Implementation decisions
 
+- **2026-09-17 · Live overview demo:** Added a deterministic, explicitly labeled overview-only activity stream at staggered 3.2–5.2 second intervals. Changed digits roll into place with brief delta chips; every hover breakdown reconciles with the same simulated totals. The table, funnel, exports, and recorded visitor evidence remain a snapshot. Pause/resume and background-tab suspension prevent unwanted updates; reduced-motion disables animation. Timer state is isolated in the overview, so the traffic table does not rerender on each tick.
+
 - **2026-09-17 · Funnel tooltip alignment:** Center stage detail popups on the triggering stage label instead of aligning to alternating cell edges. First/last popups may narrow to stay inside the results frame while retaining the same center; hover, keyboard focus, and Escape dismissal are unchanged.
 
 - **2026-09-17 · Visit-flow refinement:** Replaced the tiny text-arrow gaps with full-width SVG connectors on a shared stage-header axis. Numbered icon headers, calmer card borders, and aligned metric footers make arrival → behavior → result scan as one flow. Outcome color remains semantic without a harsh outline; connectors are decorative, not controls. All values and evidence remain record-derived.

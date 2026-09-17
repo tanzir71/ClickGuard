@@ -18,9 +18,10 @@ export interface StatBreakdown {
   scope?: string;
 }
 
-export function Stat({ label, value, caption, tone = 'default', icon, breakdown, actionLabel, onClick }: {
+export function Stat({ label, value, caption, tone = 'default', icon, breakdown, actionLabel, onClick, animate = false, change }: {
   label: string; value: string; caption?: string; tone?: StatTone; icon?: ReactNode;
   breakdown?: StatBreakdown; actionLabel?: string; onClick?: () => void;
+  animate?: boolean; change?: string;
 }) {
   const tooltipId = useId();
   const [hovered, setHovered] = useState(false);
@@ -39,7 +40,7 @@ export function Stat({ label, value, caption, tone = 'default', icon, breakdown,
   const classes = `${styles.stat} ${styles[`stat-${tone}`]}`;
   const content = <>
     <span className={styles.statHeader}><span className={styles.statLabel}>{label}</span>{icon && <span className={styles.statIcon} aria-hidden="true">{icon}</span>}</span>
-    <strong className={styles.statValue}>{value}</strong>
+    <span className={styles.statValueLine}><strong className={styles.statValue}>{animate ? <RollingValue value={value} /> : value}</strong>{change && <span key={value} className={styles.statChange} aria-hidden="true">{change}</span>}</span>
     <span className={styles.statCaption}>{caption}{breakdown && <Info aria-hidden="true" />}</span>
     {breakdown && <span className={styles.statComposition} aria-hidden="true">{breakdown.rows.filter((row) => row.value > 0).map((row) => <i key={row.label} data-tone={row.tone ?? tone} style={{ width: `${total > 0 ? row.value / total * 100 : 0}%` }} />)}</span>}
   </>;
@@ -53,4 +54,16 @@ export function Stat({ label, value, caption, tone = 'default', icon, breakdown,
       {(breakdown.scope || actionLabel) && <footer>{breakdown.scope && <span>{breakdown.scope}</span>}{actionLabel && <strong>{actionLabel} →</strong>}</footer>}
     </div></div>}
   </div>;
+}
+
+/** Animate only changed characters; updates never re-render the traffic table. */
+function RollingValue({ value }: { value: string }) {
+  const [snapshot, setSnapshot] = useState({ current: value, previous: value });
+  if (snapshot.current !== value) setSnapshot({ current: value, previous: snapshot.current });
+  const previous = snapshot.previous.padStart(value.length, ' ').slice(-value.length);
+  return <><span className={styles.srOnly}>{value}</span><span className={styles.rollingValue} aria-hidden="true">{[...value].map((character, index) => {
+    const old = previous[index];
+    const changed = character !== old && /\d/.test(character);
+    return <span className={styles.rollingCharacter} key={value.length - index}>{changed ? <span className={styles.rollingPair} key={`${old}-${character}`}><span className={styles.rollingOld}>{old}</span><span className={styles.rollingNew}>{character}</span></span> : character}</span>;
+  })}</span></>;
 }
