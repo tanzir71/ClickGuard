@@ -5,11 +5,8 @@ import { Button } from '../primitives';
 import { formatFunnelPercent, getFunnelMetrics, getFunnelProfile, type ActivityFunnelStage } from './activityFunnel';
 export type { ActivityFunnelStage } from './activityFunnel';
 export { formatFunnelPercent, getActivityFunnelStages, getFunnelMetrics, getFunnelProfile } from './activityFunnel';
-
-export function Stat({ label, value, caption, tone = 'default', onClick }: { label: string; value: string; caption?: string; tone?: 'default' | 'danger' | 'warning' | 'success'; onClick?: () => void }) {
-  const content = <><span className={styles.statLabel}>{label}</span><strong className={styles.statValue}>{value}</strong>{caption && <span className={styles.statCaption}>{caption}</span>}</>;
-  return onClick ? <button type="button" className={`${styles.stat} ${styles[`stat-${tone}`]}`} onClick={onClick}>{content}</button> : <div className={`${styles.stat} ${styles[`stat-${tone}`]}`}>{content}</div>;
-}
+export { Stat, type StatTone, type StatBreakdown, type StatBreakdownRow } from './Stat';
+export { getOverviewMetrics } from './overview';
 
 export function ActivityFunnel({ stages, filtered, total, rangeLabel }: { stages: ActivityFunnelStage[]; filtered: number; total: number; rangeLabel: string }) {
   const headingId = useId();

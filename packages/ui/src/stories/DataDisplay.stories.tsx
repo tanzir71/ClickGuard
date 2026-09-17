@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { ShieldBan, ShieldCheck, Users } from 'lucide-react';
 import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, Stat, type ActivityFunnelStage } from '../data';
 import { Button, Stack } from '../primitives';
 
@@ -7,6 +8,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Components: Story = { render: () => <Stack gap="4"><Stack direction="row" gap="3"><Stat label="Visitors" value="160" caption="evaluated in range" /><Stat label="Blocked" value="31" caption="across platforms" tone="danger" /><Stat label="Protected" value="~$1,940" caption="estimated" tone="success" /></Stack><Stack direction="row" gap="2"><FilterChip label="Status" value="Blocked, Monitoring" active onRemove={() => undefined} /><FilterChip label="Paid visits only" /></Stack><dl><KeyValue label="IP address" value="185.220.101.4" mono /><KeyValue label="Network" value="Hetzner Online · AS24940" /></dl><BatchBar count={3} onClear={() => undefined}><Button size="sm">Mark reviewed</Button></BatchBar><DataTable><thead><tr><th>Visitor</th><th>Status</th></tr></thead><tbody><tr><td>185.220.101.4</td><td>Blocked</td></tr></tbody></DataTable></Stack> };
+export const OverviewCards: Story = { render: () => <Stack direction="row" gap="3">
+  <Stat label="Visitors" value="160" caption="157 with paid traffic" icon={<Users />} onClick={() => undefined} actionLabel="View all visitors" breakdown={{ title: 'Visitor mix', rows: [{ label: 'With paid traffic', value: 157, tone: 'default' }, { label: 'Unpaid traffic only', value: 3, tone: 'muted' }], scope: 'All recorded activity' }} />
+  <Stat label="Block decisions" value="36" caption="32 blocked · 4 unresolved" tone="danger" icon={<ShieldBan />} onClick={() => undefined} actionLabel="View block decisions" breakdown={{ title: 'Block outcomes', rows: [{ label: 'Blocked', value: 32, tone: 'danger' }, { label: 'Pending exclusion', value: 1, tone: 'warning' }, { label: 'Exclusion failed', value: 3, tone: 'muted' }], note: 'Pending and failed exclusions are not completed blocks.', scope: 'Current status · all tracked visitors' }} />
+  <Stat label="Protected (est.)" value="~$1,200" caption="estimated prevented ad spend" tone="success" icon={<ShieldCheck />} breakdown={{ title: 'Estimated protection by network', rows: [{ label: 'Data-center / VPN / proxy', value: 900, displayValue: '$900.00', tone: 'success' }, { label: 'Residential', value: 200, displayValue: '$200.00', tone: 'default' }, { label: 'Mobile / other networks', value: 100, displayValue: '$100.00', tone: 'muted' }], note: 'Illustrative estimate, not measured savings.', scope: 'All recorded activity · USD' }} />
+</Stack> };
+export const EmptyOverviewCard: Story = { render: () => <Stat label="Visitors" value="0" caption="No tracked traffic yet" icon={<Users />} breakdown={{ title: 'Visitor mix', rows: [{ label: 'With paid traffic', value: 0 }, { label: 'Unpaid traffic only', value: 0, tone: 'muted' }] }} /> };
 const funnelStages: ActivityFunnelStage[] = [
   { id: 'evaluated', label: 'Evaluated', value: 160, detail: '833 visits in the selected range.' },
   { id: 'paid', label: 'Paid traffic', value: 156, detail: '510 paid clicks in the selected range.', tone: 'paid' },
