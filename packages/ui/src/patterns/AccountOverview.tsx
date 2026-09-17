@@ -97,6 +97,7 @@ export function AccountOverview({
           value={`$${Math.round(stats.wasted).toLocaleString()}`}
           animate
           change={paused ? delta : undefined}
+          emphasized={paused}
           caption={paused ? 'Rising while paused · demo' : 'Recorded + demo impact'}
           tone="danger"
           icon={<Wallet />}

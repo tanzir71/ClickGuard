@@ -29,6 +29,7 @@ export function Stat({
   onClick,
   animate = false,
   change,
+  emphasized = false,
 }: {
   label: string;
   value: string;
@@ -40,6 +41,7 @@ export function Stat({
   onClick?: () => void;
   animate?: boolean;
   change?: string;
+  emphasized?: boolean;
 }) {
   const tooltipId = useId();
   const [hovered, setHovered] = useState(false);
@@ -111,6 +113,7 @@ export function Stat({
         <button
           type="button"
           className={classes}
+          data-emphasized={emphasized || undefined}
           aria-label={`${label}: ${value}${actionLabel ? `. ${actionLabel}` : breakdown ? '. Show breakdown' : ''}`}
           aria-describedby={open ? tooltipId : undefined}
           onPointerDown={() => setFocused(false)}
@@ -127,7 +130,9 @@ export function Stat({
           {content}
         </button>
       ) : (
-        <div className={classes}>{content}</div>
+        <div className={classes} data-emphasized={emphasized || undefined}>
+          {content}
+        </div>
       )}
       {open && breakdown && (
         <div className={styles.statPopoverAnchor}>

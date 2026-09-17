@@ -464,6 +464,17 @@ button.stat:focus-visible {
   color: var(--cg-semantic-status-clean-fg);
 }
 
+.stat[data-emphasized='true'] {
+  border-color: color-mix(in srgb, var(--stat-accent) 45%, var(--cg-semantic-border-default));
+  background: var(--stat-tint);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--stat-accent) 8%, transparent);
+}
+
+.stat[data-emphasized='true'] .statValue,
+.stat[data-emphasized='true'] .statCaption {
+  color: var(--stat-accent);
+}
+
 .statComposition {
   display: flex;
   gap: 0.125rem;

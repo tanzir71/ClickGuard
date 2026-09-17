@@ -62,6 +62,23 @@ const openPause = () => {
 const confirmPause = () => fireEvent.click(openPause().getByRole('button', { name: 'Pause all protection' }));
 
 describe('protection-aware spend demo', () => {
+  it('emphasizes only Wasted spend while paused and restores its normal appearance on resume', () => {
+    const onView = vi.fn();
+    const { rerender } = render(<AccountOverview visitors={sample} onView={onView} />);
+    expect(card('Wasted spend').hasAttribute('data-emphasized')).toBe(false);
+    rerender(<AccountOverview visitors={sample} protectionMode="paused" onView={onView} />);
+    expect(card('Wasted spend').getAttribute('data-emphasized')).toBe('true');
+    expect(document.querySelectorAll('[data-emphasized="true"]')).toHaveLength(1);
+    expect(card('Wasted spend').textContent).toContain('Rising while paused · demo');
+    fireEvent.mouseEnter(card('Wasted spend').parentElement!);
+    expect(screen.getByRole('tooltip').textContent).toContain('Recorded cost + simulated waste');
+    fireEvent.click(card('Wasted spend'));
+    expect(onView).toHaveBeenCalledWith('wasted');
+    rerender(<AccountOverview visitors={sample} protectionMode="active" onView={onView} />);
+    expect(card('Wasted spend').hasAttribute('data-emphasized')).toBe(false);
+    expect(card('Wasted spend').textContent).toContain('Recorded + demo impact');
+  });
+
   it('routes each cost to exactly one bucket and preserves losses on resume', () => {
     const active = advanceSpend(EMPTY_SPEND, 'active');
     const paused = advanceSpend(active, 'paused');
