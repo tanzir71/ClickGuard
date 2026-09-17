@@ -8,6 +8,7 @@ import styles from '../styles/ClickGuard.module.css';
 export { VisitRibbon } from './VisitRibbon';
 export { buildVisitJourney } from './visitJourney';
 export { RiskChart } from './RiskChart';
+export { buildJourneyNarrative, describeJourneyVisit, keyRecordedEvents } from './journeyNarrative';
 
 const statusMeta: Record<VisitorStatus, { label: string; icon: typeof Check }> = {
   blocked: { label: 'Blocked', icon: ShieldX }, monitoring: { label: 'Monitoring', icon: Eye }, clean: { label: 'Clean', icon: Check },
@@ -82,7 +83,7 @@ export function BehaviorScrubber({ visit }: { visit: VisitVM }) {
 
 export function ScoreWaterfall({ visit, threshold }: { visit: VisitVM; threshold: number }) {
   const end = visit.scoreAfter;
-  return <div className={styles.waterfall}><div className={styles.waterfallTotal}><span>Score before this visit</span><strong>{visit.scoreBefore}</strong></div>{visit.signals.length ? visit.signals.map((signal) => <SignalBar key={`${signal.id}-${signal.points}`} signal={signal} />) : <p className={styles.muted}>No score-changing signals on this visit.</p>}<div className={styles.waterfallTotal}><span>Score after this visit</span><strong>{end} {visit.scoreBefore < threshold && end >= threshold ? '◆ crossed 70 → block' : ''}</strong></div><p className={styles.waterfallNote}>Signals are capped by category. Scores decay after seven inactive days.</p></div>;
+  return <div className={styles.waterfall}><div className={styles.waterfallTotal}><span>Score before this visit</span><strong>{visit.scoreBefore}</strong></div>{visit.signals.length ? visit.signals.map((signal) => <SignalBar key={`${signal.id}-${signal.points}`} signal={signal} />) : <p className={styles.muted}>No score-changing signals on this visit.</p>}<div className={styles.waterfallTotal}><span>Score after this visit</span><strong>{end} {visit.scoreBefore < threshold && end >= threshold ? `◆ crossed ${threshold}` : ''}</strong></div><p className={styles.waterfallNote}>Signals are capped by category. Scores decay after seven inactive days.</p></div>;
 }
 
 export function platformName(platform?: Platform) { return platform ? platformLabel[platform] : ''; }
