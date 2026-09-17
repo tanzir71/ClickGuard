@@ -35,7 +35,7 @@ function RecordedActivity({ visit, onEvents }: { visit: VisitVM; onEvents: () =>
   </section>;
 }
 
-export function FullJourney({ visitor, selectedVisitId, setSelectedVisitId, tab, setTab, onBack, onAllow }: { visitor: VisitorVM; selectedVisitId: string; setSelectedVisitId: (id: string) => void; tab: JourneyTab; setTab: (tab: JourneyTab) => void; onBack: () => void; onAllow: () => void }) {
+export function FullJourney({ visitor, protectionPaused = false, selectedVisitId, setSelectedVisitId, tab, setTab, onBack, onAllow }: { visitor: VisitorVM; protectionPaused?: boolean; selectedVisitId: string; setSelectedVisitId: (id: string) => void; tab: JourneyTab; setTab: (tab: JourneyTab) => void; onBack: () => void; onAllow: () => void }) {
   const [filter, setFilter] = useState<VisitFilter>('all');
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const detailRef = useRef<HTMLElement>(null);
@@ -88,9 +88,10 @@ export function FullJourney({ visitor, selectedVisitId, setSelectedVisitId, tab,
       <div className={styles.journeyIdentity}><div><h2 className={styles.mono}>{visitor.ip}</h2><StatusPill status={visitor.status} /></div><small>{[visitor.city, visitor.country, visitor.isp].filter(Boolean).join(' · ') || 'Location and network unknown'}</small></div>
       {visitor.status !== 'allowed' && <Button size="sm" onClick={onAllow}>Always allow</Button>}
     </header>
+    {protectionPaused && <p className={styles.journeyNotice} data-warning="true">All protection paused · these are recorded decisions, not active enforcement.</p>}
     <section className={styles.journeySynopsis} aria-label="Journey overview">
       <div className={styles.journeyHeadline}><span className={styles.eyebrow}>The visitor’s story</span><h3>{story.headline}</h3><p>{story.noInteraction > 0 ? `${story.noInteraction} of ${story.visits.length} visits had no recorded interaction. ` : ''}{story.visits.length ? `${story.visits.length} ${story.visits.length === 1 ? 'visit' : 'visits'} over ${story.span}. ` : 'No visits recorded. '}{story.after.length ? `${story.afterPaid} paid ${story.afterPaid === 1 ? 'visit' : 'visits'} recorded after the decision.` : `Current risk ${visitor.riskScore} / 100.`}</p></div>
-      <div className={styles.journeyOutcome} aria-label="Current protection status">{visitor.exclusions.filter((item) => item.state !== 'not_connected').map((item) => <span key={item.platform} data-state={item.state} title={[item.at && shortTime(item.at), item.error].filter(Boolean).join(' · ')}><i />{platformName(item.platform)} · {({ excluded: 'Excluded', syncing: 'Syncing', failed: 'Failed', removed: 'Removed', not_connected: 'Not connected' })[item.state]}</span>)}</div>
+      <div className={styles.journeyOutcome} aria-label="Current protection status">{visitor.exclusions.filter((item) => item.state !== 'not_connected').map((item) => <span key={item.platform} data-state={protectionPaused && item.state !== 'removed' ? 'failed' : item.state} title={[item.at && shortTime(item.at), item.error].filter(Boolean).join(' · ')}><i />{platformName(item.platform)} · {protectionPaused && item.state !== 'removed' ? 'Protection paused' : ({ excluded: 'Excluded', syncing: 'Syncing', failed: 'Failed', removed: 'Removed', not_connected: 'Not connected' })[item.state]}</span>)}</div>
       {visitor.allowedBy && <p className={styles.journeyNotice}>Allowed by {visitor.allowedBy.user} · {shortTime(visitor.allowedBy.at)}{visitor.allowedBy.note ? ` · “${visitor.allowedBy.note}”` : ''}</p>}
       {visitor.status === 'failed' && <p className={styles.journeyNotice} data-warning="true">{visitor.exclusions.find((item) => item.state === 'failed')?.error ?? 'An ad platform rejected the exclusion.'} Paid traffic may still arrive.</p>}
       <dl className={styles.journeyTotals}>

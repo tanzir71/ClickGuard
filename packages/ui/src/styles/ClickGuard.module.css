@@ -14,6 +14,8 @@
 .pageIntro { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--cg-space-6); }
 .pageIntro h1 { margin: var(--cg-space-1) var(--cg-space-0); font-size: var(--cg-font-display); line-height: var(--cg-line-display); font-weight: 500; letter-spacing: -0.02em; }
 .pageIntro p { margin: var(--cg-space-0); color: var(--cg-semantic-text-secondary); }
+.protectionBar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cg-space-3); margin-top: calc(var(--cg-space-2) * -1); margin-bottom: var(--cg-space-6); }
+.protectionBar > span { font-size: var(--cg-font-body-sm); color: var(--cg-semantic-text-secondary); }
 .eyebrow { font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); line-height: var(--cg-line-mono); text-transform: uppercase; letter-spacing: 0.04em; color: var(--cg-semantic-text-secondary); }
 .statsOverview { width: 100%; max-width: calc(var(--cg-size-overview-card) * 5 + var(--cg-space-3) * 4); margin-bottom: var(--cg-space-6); }
 .statsHeading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cg-space-3); margin-bottom: var(--cg-space-3); }

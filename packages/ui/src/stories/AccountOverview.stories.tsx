@@ -18,5 +18,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const LiveDemo: Story = {};
+export const ProtectionPaused: Story = { args: { protectionMode: 'paused' } };
 export const EmptyAccount: Story = { args: { visitors: [] } };
 export const Inactive: Story = { args: { enabled: false } };
