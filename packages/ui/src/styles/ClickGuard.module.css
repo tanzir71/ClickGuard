@@ -110,7 +110,7 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .outageBanner { display: flex; align-items: center; gap: var(--cg-space-2); padding: var(--cg-space-3) var(--cg-space-4); color: var(--cg-semantic-status-monitoring-fg); background: var(--cg-semantic-status-monitoring-bg); border-right: 1px solid var(--cg-semantic-border-default); border-left: 1px solid var(--cg-semantic-border-default); }
 .outageBanner svg { width: 1rem; }
 .outageBanner button { margin-left: auto; border: 0; background: transparent; color: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
-.workspace { display: flex; min-height: 40rem; background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-top: 0; border-radius: var(--cg-radius-sm) var(--cg-radius-sm) var(--cg-radius-lg) var(--cg-radius-lg); overflow: hidden; }
+.workspace { display: flex; min-height: 40rem; background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-top: 0; border-radius: var(--cg-radius-sm) var(--cg-radius-sm) var(--cg-radius-lg) var(--cg-radius-lg); overflow: clip; }
 .results { min-width: 0; flex: 1; overflow: hidden; }
 .panelOpen .secondaryColumn { display: none; }
 .tableScroller { width: 100%; overflow-x: auto; }
@@ -154,20 +154,20 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .expandedContent > button[data-after='true'] { opacity: 0.55; }
 .expandedContent footer { text-align: right; }
 .systemRow, .streamSystem { padding: var(--cg-space-2) var(--cg-space-4); color: var(--cg-semantic-text-secondary); background: var(--cg-semantic-bg-subtle); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
-.visitorPanel { position: relative; display: flex; flex-direction: column; width: var(--cg-size-panel); min-width: var(--cg-size-panel); height: calc(100vh - 5.5rem); border-left: 1px solid var(--cg-semantic-border-default); background: var(--cg-semantic-bg-surface); box-shadow: var(--cg-shadow-lg); animation: panel-in var(--cg-motion-base) var(--cg-motion-ease); }
-.panelHeader { position: sticky; top: 0; z-index: 2; padding: var(--cg-space-4); background: var(--cg-semantic-bg-surface); border-bottom: 1px solid var(--cg-semantic-border-default); }
+.visitorPanel { position: sticky; top: calc(4rem + var(--cg-space-4)); z-index: 8; align-self: flex-start; display: flex; flex: none; flex-direction: column; width: var(--cg-size-panel); min-width: var(--cg-size-panel); height: calc(100dvh - 4rem - var(--cg-space-4) * 2); min-height: 0; border-left: 1px solid var(--cg-semantic-border-default); background: var(--cg-semantic-bg-surface); box-shadow: var(--cg-shadow-lg); animation: panel-in var(--cg-motion-base) var(--cg-motion-ease); }
+.panelHeader { position: relative; z-index: 2; flex: none; padding: var(--cg-space-4); background: var(--cg-semantic-bg-surface); border-bottom: 1px solid var(--cg-semantic-border-default); }
 .panelHeader > div:first-child { padding-right: 7rem; }
 .panelHeader > .stack { position: absolute; top: var(--cg-space-3); right: var(--cg-space-3); }
 .panelHeader h2 { display: flex; align-items: center; gap: var(--cg-space-1); margin: var(--cg-space-1) var(--cg-space-0); font-size: var(--cg-font-heading-lg); line-height: var(--cg-line-heading-lg); }
 .panelHeader h2 button { display: inline-grid; place-items: center; padding: var(--cg-space-1); border: 0; background: transparent; cursor: pointer; }
 .panelHeader h2 svg { width: 1rem; }
 .panelHeader p, .panelHeader small { display: block; margin: var(--cg-space-0); color: var(--cg-semantic-text-secondary); }
-.panelBody { flex: 1; overflow-y: auto; }
+.panelBody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
 .panelSection { padding: var(--cg-space-4); border-bottom: 1px solid var(--cg-semantic-border-default); }
 .panelSection > header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--cg-space-3); }
 .panelSection > header h3 { margin: var(--cg-space-0); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); line-height: var(--cg-line-mono); text-transform: uppercase; letter-spacing: 0.04em; }
 .panelSection > header span { font-weight: 600; }
-.panelFooter { position: sticky; bottom: 0; z-index: 2; display: grid; gap: var(--cg-space-2); padding: var(--cg-space-3) var(--cg-space-4); background: var(--cg-semantic-bg-surface); border-top: 1px solid var(--cg-semantic-border-default); box-shadow: var(--cg-shadow-md); }
+.panelFooter { position: relative; z-index: 2; flex: none; display: grid; gap: var(--cg-space-2); padding: var(--cg-space-3) var(--cg-space-4); background: var(--cg-semantic-bg-surface); border-top: 1px solid var(--cg-semantic-border-default); box-shadow: var(--cg-shadow-md); }
 .confirmCard strong, .confirmCard p { display: block; margin: var(--cg-space-0) var(--cg-space-0) var(--cg-space-2); }
 .confirmCard p { color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
 .confirmCard > div { display: flex; justify-content: flex-end; gap: var(--cg-space-2); }
@@ -461,8 +461,9 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 @keyframes skeleton { to { background-position: -200% 0; } }
 
 @media (max-width: 79.9375rem) {
-  .visitorPanel { position: absolute; right: var(--cg-space-0); z-index: 8; width: 30rem; }
-  .workspace { position: relative; }
+  .visitorPanel { grid-area: 1 / 1; justify-self: end; width: 30rem; }
+  .workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .results { grid-area: 1 / 1; }
   .panelOpen .secondaryColumn { display: table-cell; }
 }
 
