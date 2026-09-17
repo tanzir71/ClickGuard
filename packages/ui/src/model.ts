@@ -76,6 +76,8 @@ export interface ExclusionVM {
   error?: string;
 }
 
+export type VisitorAction = 'block' | 'unblock' | 'allow' | 'remove_allowance';
+
 export interface VisitorVM {
   ip: string;
   city?: string;
@@ -96,6 +98,7 @@ export interface VisitorVM {
   decisionBy?: string;
   exclusions: ExclusionVM[];
   allowedBy?: { user: string; at: string; note?: string };
+  manualAction?: { type: VisitorAction; user: string; at: string };
   visits: VisitVM[];
   paidVisits: number;
   unpaidVisits: number;

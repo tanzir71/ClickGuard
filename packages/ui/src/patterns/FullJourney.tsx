@@ -19,7 +19,7 @@ import {
   ShoppingBag,
   TrendingUp,
 } from 'lucide-react';
-import type { VisitVM, VisitorVM } from '../model';
+import type { VisitVM, VisitorAction, VisitorVM } from '../model';
 import { KeyValue } from '../data';
 import {
   BehaviorScrubber,
@@ -42,6 +42,7 @@ import {
 } from '../domain/journeyNarrative';
 import { Button, IconButton, Stack, Tabs } from '../primitives';
 import { VisitSequence } from './VisitSequence';
+import { VisitorActions } from './VisitorActions';
 import styles from '../styles/ClickGuard.module.css';
 
 export type JourneyTab = 'events' | 'score' | 'device';
@@ -160,7 +161,7 @@ export function FullJourney({
   tab,
   setTab,
   onBack,
-  onAllow,
+  onAction,
 }: {
   visitor: VisitorVM;
   protectionPaused?: boolean;
@@ -169,7 +170,7 @@ export function FullJourney({
   tab: JourneyTab;
   setTab: (tab: JourneyTab) => void;
   onBack: () => void;
-  onAllow: () => void;
+  onAction: (action: VisitorAction) => void;
 }) {
   const [filter, setFilter] = useState<VisitFilter>('all');
   const [evidenceOpen, setEvidenceOpen] = useState(false);
@@ -251,11 +252,9 @@ export function FullJourney({
               'Location and network unknown'}
           </small>
         </div>
-        {visitor.status !== 'allowed' && (
-          <Button size="sm" onClick={onAllow}>
-            Always allow
-          </Button>
-        )}
+        <Stack direction="row" gap="2">
+          <VisitorActions visitor={visitor} protectionPaused={protectionPaused} onAction={onAction} />
+        </Stack>
       </header>
       {protectionPaused && (
         <p className={styles.journeyNotice} data-warning="true">

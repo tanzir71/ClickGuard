@@ -128,10 +128,25 @@ export const TextInput = forwardRef<
   );
 });
 
-export function Menu({ label, children }: { label: string; children: ReactNode }) {
+export function Menu({
+  label,
+  ariaLabel,
+  children,
+}: {
+  label: string;
+  ariaLabel?: string;
+  children: ReactNode;
+}) {
   return (
-    <details className={styles.menu}>
-      <summary className={styles.menuTrigger}>{label}</summary>
+    <details
+      className={styles.menu}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest('button:not(:disabled)')) event.currentTarget.open = false;
+      }}
+    >
+      <summary className={styles.menuTrigger} aria-label={ariaLabel}>
+        {label}
+      </summary>
       <div className={styles.menuContent}>{children}</div>
     </details>
   );

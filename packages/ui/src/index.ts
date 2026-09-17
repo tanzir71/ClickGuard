@@ -10,3 +10,6 @@ export {
   PauseProtectionDialog,
 } from './patterns/ProtectionControl';
 export { FullJourney, type JourneyTab } from './patterns/FullJourney';
+export { VisitorActions } from './patterns/VisitorActions';
+export { applyVisitorAction } from './patterns/visitorEnforcement';
+export { buildDecisionRoute } from './domain/journeyNarrative';

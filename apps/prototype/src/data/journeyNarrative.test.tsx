@@ -29,7 +29,7 @@ function JourneyHarness({ visitor = blocked }: { visitor?: VisitorVM }) {
       tab={tab}
       setTab={setTab}
       onBack={() => {}}
-      onAllow={() => {}}
+      onAction={() => {}}
     />
   );
 }

@@ -20,7 +20,7 @@ import {
   Shield,
   X,
 } from 'lucide-react';
-import type { Platform, ThreatMonitorProps, VisitVM, VisitorStatus, VisitorVM } from '../model';
+import type { ThreatMonitorProps, VisitVM, VisitorAction, VisitorStatus, VisitorVM } from '../model';
 import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows } from '../data';
 import { getActivityFunnelStages } from '../data/activityFunnel';
 import {
@@ -54,6 +54,8 @@ import { FullJourney, type JourneyTab } from './FullJourney';
 import { AccountOverview } from './AccountOverview';
 import { ProtectionControl, ProtectionPausedBanner } from './ProtectionControl';
 import { useProtectionMode } from './useProtectionDemo';
+import { VisitorActions } from './VisitorActions';
+import { actionDescription, actionLabel, applyVisitorAction, hasBlock } from './visitorEnforcement';
 import styles from '../styles/ClickGuard.module.css';
 
 type ViewMode = 'visitors' | 'visits';
@@ -115,7 +117,7 @@ export function ThreatMonitor({
   const [journeyOpen, setJourneyOpen] = useState(initial.journey);
   const [selectedVisitId, setSelectedVisitId] = useState(initial.visit);
   const [journeyTab, setJourneyTab] = useState<JourneyTab>('events');
-  const [confirmAction, setConfirmAction] = useState<'allow' | 'block' | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ ip: string; action: VisitorAction } | null>(null);
   const [toast, setToast] = useState<{ message: string; undo?: () => void } | null>(null);
   const [simulation, setSimulation] = useState<Simulation>(initialSimulation ?? initial.simulate);
   const [loading, setLoading] = useState(simulation === 'slow');
@@ -269,7 +271,7 @@ export function ThreatMonitor({
   const openVisitor = (ip: string, visitId?: string) => {
     setSelectedIp((current) => (current === ip && !visitId ? '' : ip));
     if (visitId) setSelectedVisitId(visitId);
-    setConfirmAction(null);
+    setPendingAction(null);
   };
   const toggleChecked = (ip: string) =>
     setChecked((current) => {
@@ -307,35 +309,29 @@ export function ThreatMonitor({
     if (event.key.toLowerCase() === 'o' && selected) setJourneyOpen(true);
   };
 
-  const updateVisitor = (ip: string, action: 'allow' | 'block') => {
+  const requestAction = (ip: string, action: VisitorAction) => {
+    if (action === 'block' && protectionPaused) return;
+    setSelectedIp(ip);
+    setJourneyOpen(false);
+    setPendingAction({ ip, action });
+  };
+
+  const updateVisitor = (ip: string, action: VisitorAction) => {
     if (action === 'block' && protectionPaused) return;
     const before = visitors.find((visitor) => visitor.ip === ip);
     if (!before) return;
-    const next: VisitorVM =
-      action === 'allow'
-        ? {
-            ...before,
-            status: 'allowed',
-            allowedBy: { user: 'Tanzir', at: now, note: 'Reviewed in Threat Monitoring' },
-            exclusions: before.exclusions.map((item) => ({ ...item, state: 'removed' as const, at: now })),
-          }
-        : {
-            ...before,
-            status: 'blocked',
-            blockedAt: now,
-            blockedAtVisitId: before.visits.at(-1)?.id,
-            decisionBy: 'Tanzir',
-            riskScore: Math.max(before.threshold, before.riskScore),
-            exclusions: (['google_ads', 'meta_ads'] as Platform[]).map((item) => ({
-              platform: item,
-              state: 'excluded' as const,
-              at: now,
-            })),
-          };
-    setVisitors((current) => current.map((visitor) => (visitor.ip === ip ? next : visitor)));
-    setConfirmAction(null);
+    setVisitors((current) =>
+      current.map((visitor) => (visitor.ip === ip ? applyVisitorAction(visitor, action, now) : visitor)),
+    );
+    setPendingAction(null);
+    const outcome = {
+      block: 'Blocked',
+      unblock: 'Unblocked',
+      allow: 'Always allowed',
+      remove_allowance: 'Allowance removed for',
+    };
     setToast({
-      message: `${action === 'allow' ? 'Allowed' : 'Blocked'} ${ip}`,
+      message: `${outcome[action]} ${ip} · demo only`,
       undo: () => {
         setVisitors((current) => current.map((visitor) => (visitor.ip === ip ? before : visitor)));
         setToast({ message: `Restored ${ip}` });
@@ -343,33 +339,25 @@ export function ThreatMonitor({
     });
   };
 
-  const batchAction = (action: 'allow' | 'block' | 'review') => {
+  const batchAction = (action: VisitorAction | 'review') => {
     if (action === 'block' && protectionPaused) return;
-    const snapshot = visitors;
+    const targets = visitors.filter(
+      (visitor) => checked.has(visitor.ip) && (action !== 'unblock' || hasBlock(visitor)),
+    );
+    const snapshot = new Map(targets.map((visitor) => [visitor.ip, visitor]));
     setVisitors((current) =>
       current.map((visitor) =>
-        checked.has(visitor.ip)
-          ? action === 'review'
+        !snapshot.has(visitor.ip)
+          ? visitor
+          : action === 'review'
             ? { ...visitor, reviewed: true, needsReview: false }
-            : action === 'allow'
-              ? {
-                  ...visitor,
-                  status: 'allowed',
-                  allowedBy: { user: 'Tanzir', at: now },
-                  exclusions: visitor.exclusions.map((item) => ({ ...item, state: 'removed' as const })),
-                }
-              : {
-                  ...visitor,
-                  status: 'blocked',
-                  blockedAt: now,
-                  blockedAtVisitId: visitor.visits.at(-1)?.id,
-                  decisionBy: 'Tanzir',
-                  riskScore: Math.max(70, visitor.riskScore),
-                }
-          : visitor,
+            : applyVisitorAction(visitor, action, now),
       ),
     );
-    setToast({ message: `${checked.size} visitors updated`, undo: () => setVisitors(snapshot) });
+    setToast({
+      message: `${targets.length} ${targets.length === 1 ? 'visitor' : 'visitors'} updated · demo only`,
+      undo: () => setVisitors((current) => current.map((visitor) => snapshot.get(visitor.ip) ?? visitor)),
+    });
     setChecked(new Set());
   };
 
@@ -427,7 +415,7 @@ export function ThreatMonitor({
             mode={protectionMode}
             onChange={(mode) => {
               setProtectionMode(mode);
-              setConfirmAction(null);
+              setPendingAction(null);
             }}
           />
           <span>Prototype simulation · no ad accounts are changed</span>
@@ -484,6 +472,13 @@ export function ThreatMonitor({
                 onClick={() => batchAction('block')}
               >
                 Block now
+              </Button>
+              <Button
+                size="sm"
+                disabled={!visitors.some((visitor) => checked.has(visitor.ip) && hasBlock(visitor))}
+                onClick={() => batchAction('unblock')}
+              >
+                Unblock
               </Button>
               <Button size="sm" onClick={() => batchAction('allow')}>
                 Always allow
@@ -605,6 +600,7 @@ export function ThreatMonitor({
                   expandedIp={expandedIp}
                   checked={checked}
                   onOpen={openVisitor}
+                  onAction={requestAction}
                   onExpand={(ip) => setExpandedIp((current) => (current === ip ? '' : ip))}
                   onCheck={toggleChecked}
                   onCheckAll={() =>
@@ -625,6 +621,8 @@ export function ThreatMonitor({
               ) : (
                 <VisitsTable
                   rows={allVisits}
+                  protectionPaused={protectionPaused}
+                  onAction={requestAction}
                   selectedIp={selectedIp}
                   checked={checked}
                   onOpen={openVisitor}
@@ -666,9 +664,11 @@ export function ThreatMonitor({
                   if (visitId) setSelectedVisitId(visitId);
                   setJourneyOpen(true);
                 }}
-                onAction={setConfirmAction}
-                confirmAction={confirmAction}
-                onConfirm={() => confirmAction && updateVisitor(selected.ip, confirmAction)}
+                onAction={(action) => (action ? requestAction(selected.ip, action) : setPendingAction(null))}
+                confirmAction={pendingAction?.ip === selected.ip ? pendingAction.action : null}
+                onConfirm={() =>
+                  pendingAction?.ip === selected.ip && updateVisitor(selected.ip, pendingAction.action)
+                }
                 selectedVisitId={selectedVisitId}
                 onSelectVisit={setSelectedVisitId}
               />
@@ -690,10 +690,7 @@ export function ThreatMonitor({
             tab={journeyTab}
             setTab={setJourneyTab}
             onBack={() => setJourneyOpen(false)}
-            onAllow={() => {
-              setConfirmAction('allow');
-              setJourneyOpen(false);
-            }}
+            onAction={(action) => requestAction(selected.ip, action)}
           />
         )}
       </Sheet>
@@ -765,6 +762,7 @@ function VisitorTable({
   sort,
   cycleSort,
   onOpenJourney,
+  onAction,
 }: {
   visitors: VisitorVM[];
   protectionPaused: boolean;
@@ -779,6 +777,7 @@ function VisitorTable({
   sort: { key: SortKey; direction: SortDirection };
   cycleSort: (key: SortKey) => void;
   onOpenJourney: (ip: string, visitId?: string) => void;
+  onAction: (ip: string, action: VisitorAction) => void;
 }) {
   return (
     <DataTable>
@@ -842,6 +841,7 @@ function VisitorTable({
             onExpand={onExpand}
             onCheck={onCheck}
             onOpenJourney={onOpenJourney}
+            onAction={onAction}
           />
         ))}
       </tbody>
@@ -860,6 +860,7 @@ function VisitorRow({
   onExpand,
   onCheck,
   onOpenJourney,
+  onAction,
 }: {
   visitor: VisitorVM;
   protectionPaused: boolean;
@@ -871,6 +872,7 @@ function VisitorRow({
   onExpand: (ip: string) => void;
   onCheck: (ip: string) => void;
   onOpenJourney: (ip: string, visitId?: string) => void;
+  onAction: (ip: string, action: VisitorAction) => void;
 }) {
   const blockedPlatforms = visitor.exclusions
     .filter((item) => item.state === 'excluded')
@@ -918,23 +920,27 @@ function VisitorRow({
         <td>
           <StatusPill status={visitor.status} withPlatforms={protectionPaused ? [] : blockedPlatforms} />
           <small className={styles.cellSub}>
-            {protectionPaused &&
-            visitor.exclusions.some((item) => ['excluded', 'syncing', 'failed'].includes(item.state))
-              ? 'Enforcement paused'
-              : visitor.exclusions
-                  .filter((item) => ['excluded', 'syncing', 'failed'].includes(item.state))
-                  .map(
-                    (item) =>
-                      `${item.platform === 'google_ads' ? 'G' : item.platform === 'meta_ads' ? 'M' : 'MS'} ` +
-                      (item.state === 'excluded'
-                        ? '✓'
-                        : item.state === 'failed'
-                          ? '!'
-                          : item.state === 'syncing'
-                            ? '◌'
-                            : '–'),
-                  )
-                  .join('  ')}
+            {visitor.manualAction?.type === 'unblock'
+              ? 'Manually unblocked'
+              : visitor.manualAction?.type === 'block' && !protectionPaused
+                ? 'Manual block'
+                : protectionPaused &&
+                    visitor.exclusions.some((item) => ['excluded', 'syncing', 'failed'].includes(item.state))
+                  ? 'Enforcement paused'
+                  : visitor.exclusions
+                      .filter((item) => ['excluded', 'syncing', 'failed'].includes(item.state))
+                      .map(
+                        (item) =>
+                          `${item.platform === 'google_ads' ? 'G' : item.platform === 'meta_ads' ? 'M' : 'MS'} ` +
+                          (item.state === 'excluded'
+                            ? '✓'
+                            : item.state === 'failed'
+                              ? '!'
+                              : item.state === 'syncing'
+                                ? '◌'
+                                : '–'),
+                      )
+                      .join('  ')}
           </small>
         </td>
         <td>
@@ -973,7 +979,12 @@ function VisitorRow({
           </small>
         </td>
         <td>
-          <Menu label="•••">
+          <Menu label="•••" ariaLabel={`Actions for ${visitor.ip}`}>
+            <VisitorActions
+              visitor={visitor}
+              protectionPaused={protectionPaused}
+              onAction={(action) => onAction(visitor.ip, action)}
+            />
             <button type="button" onClick={() => onOpenJourney(visitor.ip)}>
               Open full journey
             </button>
@@ -1066,7 +1077,11 @@ function VisitsTable({
   checked,
   onOpen,
   onCheck,
+  protectionPaused,
+  onAction,
 }: {
+  protectionPaused: boolean;
+  onAction: (ip: string, action: VisitorAction) => void;
   rows: Array<{ visitor: VisitorVM; visit: VisitVM }>;
   selectedIp: string;
   checked: Set<string>;
@@ -1088,6 +1103,9 @@ function VisitsTable({
           <th>Bot</th>
           <th>Δ score</th>
           <th>Cost</th>
+          <th>
+            <span className={styles.srOnly}>Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -1124,6 +1142,15 @@ function VisitsTable({
               {visit.scoreBefore} → {visit.scoreAfter}
             </td>
             <td>{visit.cpc ? `$${visit.cpc.toFixed(2)}` : 'No ad spend'}</td>
+            <td onClick={(event) => event.stopPropagation()}>
+              <Menu label="•••" ariaLabel={`Actions for ${visitor.ip} visit ${visit.id}`}>
+                <VisitorActions
+                  visitor={visitor}
+                  protectionPaused={protectionPaused}
+                  onAction={(action) => onAction(visitor.ip, action)}
+                />
+              </Menu>
+            </td>
           </tr>
         ))}
       </tbody>
@@ -1150,12 +1177,16 @@ function VisitorPanel({
   onPrevious: () => void;
   onNext: () => void;
   onOpenJourney: (visitId?: string) => void;
-  onAction: (action: 'allow' | 'block' | null) => void;
-  confirmAction: 'allow' | 'block' | null;
+  onAction: (action: VisitorAction | null) => void;
+  confirmAction: VisitorAction | null;
   onConfirm: () => void;
   selectedVisitId: string;
   onSelectVisit: (id: string) => void;
 }) {
+  const confirmationRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (confirmAction) confirmationRef.current?.querySelector('button')?.focus();
+  }, [confirmAction, visitor.ip]);
   const related = visitor.related;
   const hasRelated =
     related &&
@@ -1214,17 +1245,19 @@ function VisitorPanel({
         <VerdictCard
           status={visitor.status}
           sentence={visitor.verdict}
-          meta={`${visitor.decisionBy ?? 'Auto'} · ${visitor.riskScore}`}
+          meta={`${visitor.manualAction?.user ?? visitor.decisionBy ?? 'Auto'} · ${visitor.riskScore}`}
         />
       </header>
       <div className={styles.panelBody}>
         <PanelSection
           label={
-            visitor.status === 'monitoring'
-              ? 'Will be excluded on'
-              : protectionPaused
-                ? 'Exclusions · enforcement paused'
-                : 'Excluded on'
+            visitor.manualAction
+              ? 'Ad exclusions'
+              : visitor.status === 'monitoring'
+                ? 'Will be excluded on'
+                : protectionPaused
+                  ? 'Exclusions · enforcement paused'
+                  : 'Excluded on'
           }
         >
           <ExclusionList rows={visitor.exclusions} protectionPaused={protectionPaused} />
@@ -1235,6 +1268,7 @@ function VisitorPanel({
             blockedAtVisitId={visitor.blockedAtVisitId}
             exclusions={visitor.exclusions}
             allowedBy={visitor.allowedBy}
+            manualAction={visitor.manualAction}
             threshold={visitor.threshold}
             status={visitor.status}
           />
@@ -1250,13 +1284,15 @@ function VisitorPanel({
         </PanelSection>
         <PanelSection
           label={
-            visitor.status === 'clean'
-              ? 'Why it looks real'
-              : visitor.status === 'monitoring'
-                ? 'Why it’s not blocked yet'
-                : visitor.status === 'allowed'
-                  ? 'What we’d have blocked on'
-                  : 'Why we blocked'
+            visitor.manualAction
+              ? 'Recorded risk signals'
+              : visitor.status === 'clean'
+                ? 'Why it looks real'
+                : visitor.status === 'monitoring'
+                  ? 'Why it’s not blocked yet'
+                  : visitor.status === 'allowed'
+                    ? 'What we’d have blocked on'
+                    : 'Why we blocked'
           }
         >
           {visitor.topSignals
@@ -1388,16 +1424,12 @@ function VisitorPanel({
       </div>
       <footer className={styles.panelFooter}>
         {confirmAction ? (
-          <div className={styles.confirmCard}>
+          <div className={styles.confirmCard} ref={confirmationRef}>
             <strong>
-              {confirmAction === 'allow' ? `Always allow ${visitor.ip}?` : `Block ${visitor.ip} now?`}
+              {actionLabel[confirmAction]} {visitor.ip}?
             </strong>
-            <p>
-              {confirmAction === 'allow'
-                ? 'We’ll remove it from connected exclusion lists and never block it again. ' +
-                  `It has cost $${visitor.wastedSpend.toFixed(2)} so far.`
-                : `Exclude on Google Ads and Meta Ads now? Its score is ${visitor.riskScore} (threshold ${visitor.threshold}).`}
-            </p>
+            <p>{actionDescription(visitor, confirmAction)}</p>
+            <p>Prototype only — no real ad accounts are changed.</p>
             <div>
               <Button size="sm" onClick={() => onAction(null)}>
                 Cancel
@@ -1408,7 +1440,7 @@ function VisitorPanel({
                 variant={confirmAction === 'block' ? 'danger' : 'primary'}
                 onClick={onConfirm}
               >
-                {confirmAction === 'block' ? 'Block now' : 'Always allow'}
+                {actionLabel[confirmAction]}
               </Button>
             </div>
           </div>
@@ -1417,26 +1449,7 @@ function VisitorPanel({
             <Button variant="primary" onClick={() => onOpenJourney()}>
               Open full journey →
             </Button>
-            {visitor.status === 'blocked' ? (
-              <Button onClick={() => onAction('allow')}>Always allow this IP</Button>
-            ) : visitor.status === 'allowed' ? (
-              <Button
-                disabled={protectionPaused}
-                title={protectionPaused ? 'Resume protection first' : undefined}
-                onClick={() => onAction('block')}
-              >
-                Remove allowance
-              </Button>
-            ) : (
-              <Button
-                variant="danger"
-                disabled={protectionPaused}
-                title={protectionPaused ? 'Resume protection to block visitors' : undefined}
-                onClick={() => onAction('block')}
-              >
-                Block now
-              </Button>
-            )}
+            <VisitorActions visitor={visitor} protectionPaused={protectionPaused} onAction={onAction} />
           </>
         )}
       </footer>

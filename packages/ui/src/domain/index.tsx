@@ -262,6 +262,7 @@ export function DecisionRoute({
   blockedAtVisitId,
   exclusions,
   allowedBy,
+  manualAction,
   threshold = 70,
   status = 'monitoring',
 }: {
@@ -269,10 +270,19 @@ export function DecisionRoute({
   blockedAtVisitId?: string;
   exclusions: ExclusionVM[];
   allowedBy?: { user: string; at: string; note?: string };
+  manualAction?: VisitorVM['manualAction'];
   threshold?: number;
   status?: VisitorStatus;
 }) {
-  const nodes = buildDecisionRoute({ visits, blockedAtVisitId, exclusions, allowedBy, threshold, status });
+  const nodes = buildDecisionRoute({
+    visits,
+    blockedAtVisitId,
+    exclusions,
+    allowedBy,
+    manualAction,
+    threshold,
+    status,
+  });
   return (
     <div className={styles.decisionRoute}>
       {nodes.map((node, index) => (

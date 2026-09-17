@@ -2537,6 +2537,7 @@ button.stat:focus-visible {
 }
 
 .menuContent button {
+  justify-content: flex-start;
   padding: var(--cg-space-2) var(--cg-space-3);
   text-align: left;
   background: transparent;
@@ -2547,6 +2548,15 @@ button.stat:focus-visible {
 
 .menuContent button:hover {
   background: var(--cg-semantic-bg-subtle);
+}
+
+.menuContent .button-danger {
+  color: var(--cg-semantic-status-blocked-fg);
+}
+
+.menuContent button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .segmented {
@@ -2668,8 +2678,8 @@ button.stat:focus-visible {
 
 .toast {
   position: fixed;
-  right: var(--cg-space-6);
-  bottom: var(--cg-space-6);
+  left: var(--cg-space-6);
+  bottom: calc(var(--cg-space-6) * 3);
   z-index: 100;
   display: flex;
   align-items: center;

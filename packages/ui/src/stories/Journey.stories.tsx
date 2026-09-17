@@ -53,7 +53,7 @@ function JourneyExample({ visitor }: { visitor: VisitorVM }) {
       tab={tab}
       setTab={setTab}
       onBack={() => {}}
-      onAllow={() => {}}
+      onAction={() => {}}
     />
   );
 }

@@ -5,9 +5,13 @@ export function buildDecisionRoute({
   blockedAtVisitId,
   exclusions,
   allowedBy,
+  manualAction,
   threshold,
   status,
-}: Pick<VisitorVM, 'visits' | 'blockedAtVisitId' | 'exclusions' | 'allowedBy' | 'threshold' | 'status'>) {
+}: Pick<
+  VisitorVM,
+  'visits' | 'blockedAtVisitId' | 'exclusions' | 'allowedBy' | 'manualAction' | 'threshold' | 'status'
+>) {
   const visits = [...input].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
   if (!visits.length) return [];
   const first = visits[0];
@@ -49,7 +53,7 @@ export function buildDecisionRoute({
       sub: `score ${trigger.scoreBefore} → ${trigger.scoreAfter} · threshold ${threshold}`,
     });
   const excluded = exclusions.filter((row) => row.state === 'excluded');
-  if (excluded.length)
+  if (excluded.length && manualAction?.type !== 'block')
     nodes.push({
       icon: '⛨',
       title: 'Excluded from ads',
@@ -74,7 +78,7 @@ export function buildDecisionRoute({
       title: `Last seen · ${time(last.startedAt)}`,
       sub: `${source(last)} → ${last.landingPath}${last.afterBlock ? ' · after block' : ''}`,
     });
-  if (!trigger && status === 'monitoring') {
+  if (!trigger && !manualAction && status === 'monitoring') {
     nodes.push({
       icon: '◇',
       title: `Closest to threshold · peaked at ${peak.scoreAfter} on visit ${visits.indexOf(peak) + 1}`,
@@ -87,6 +91,23 @@ export function buildDecisionRoute({
         : 'Would block on its first paid click',
       sub: 'No block decision recorded',
       prospective: true,
+    });
+  }
+  if (manualAction && manualAction.type !== 'allow') {
+    const title =
+      manualAction.type === 'block'
+        ? 'Manually blocked'
+        : manualAction.type === 'unblock'
+          ? 'Manually unblocked'
+          : 'Allowance removed';
+    const detail =
+      manualAction.type === 'block'
+        ? 'Independent of risk score'
+        : 'Monitoring continues; future activity can trigger a block';
+    nodes.push({
+      icon: manualAction.type === 'block' ? '⛨' : '○',
+      title: `${title} · ${time(manualAction.at)}`,
+      sub: `${manualAction.user} · ${detail}`,
     });
   }
   return nodes;
@@ -238,6 +259,26 @@ export function buildJourneyNarrative(visitor: VisitorVM) {
       );
     }
   }
+  if (last && visitor.manualAction && visitor.manualAction.type !== 'allow') {
+    const action = visitor.manualAction;
+    chapters.push({
+      id: 'manual-action',
+      kind: action.type === 'block' ? 'decision' : 'monitoring',
+      title:
+        action.type === 'block'
+          ? `Manually blocked by ${action.user}`
+          : action.type === 'unblock'
+            ? `Unblocked by ${action.user}`
+            : `Allowance removed by ${action.user}`,
+      detail:
+        action.type === 'block'
+          ? 'Manual exclusion; recorded risk and visits are unchanged'
+          : 'Monitoring continues; future activity can trigger a block',
+      visitId: last.id,
+      at: action.at,
+      tone: action.type === 'block' ? 'risk' : 'neutral',
+    });
+  }
   return {
     visits,
     first,
@@ -250,7 +291,7 @@ export function buildJourneyNarrative(visitor: VisitorVM) {
     conversions,
     noInteraction,
     chapters,
-    headline: headlines[visitor.status],
+    headline: visitor.manualAction ? visitor.verdict : headlines[visitor.status],
     span: first && last ? journeySpan(first.startedAt, last.startedAt) : '—',
     totalDuration: visits.reduce((sum, visit) => sum + visit.durationMs, 0),
   };
