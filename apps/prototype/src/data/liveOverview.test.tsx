@@ -281,7 +281,7 @@ describe('protection-aware spend demo', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('keeps the H1–H3 table/funnel and session additions unchanged by filters or dates', () => {
+  it('keeps ticks out of recorded data and preserves session additions when filters or dates change', () => {
     vi.useFakeTimers();
     render(<ThreatMonitor visitors={sample} now={FIXED_NOW} />);
     const table = screen.getByRole('table', { name: 'Threat monitoring results' });

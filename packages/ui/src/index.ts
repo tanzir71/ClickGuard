@@ -1,6 +1,7 @@
 export * from './model';
 export * from './primitives';
 export * from './data';
+export { getVisitorsInRange } from './data/dateRange';
 export * from './domain';
 export * from './patterns/ThreatMonitor';
 export { AccountOverview } from './patterns/AccountOverview';

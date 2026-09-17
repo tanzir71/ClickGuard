@@ -14,7 +14,9 @@ export function getActivityFunnelStages(
   now: string,
   rangeDays: number,
 ): ActivityFunnelStage[] {
-  const cutoff = new Date(now).getTime() - rangeDays * 86400000;
+  const end = new Date(now).getTime();
+  const cutoff = end - rangeDays * 86400000;
+  let evaluated = 0;
   let visits = 0;
   let paidVisitors = 0;
   let paidVisits = 0;
@@ -23,7 +25,12 @@ export function getActivityFunnelStages(
   const decisions = { blocked: 0, pending: 0, failed: 0 };
 
   for (const visitor of visitors) {
-    const visitsInRange = visitor.visits.filter((visit) => new Date(visit.startedAt).getTime() >= cutoff);
+    const visitsInRange = visitor.visits.filter((visit) => {
+      const at = new Date(visit.startedAt).getTime();
+      return at >= cutoff && at <= end;
+    });
+    if (!visitsInRange.length) continue;
+    evaluated += 1;
     const paidVisitsInRange = visitsInRange.filter((visit) => visit.source === 'paid');
     visits += visitsInRange.length;
     if (paidVisitsInRange.length === 0) continue;
@@ -41,7 +48,7 @@ export function getActivityFunnelStages(
     {
       id: 'evaluated',
       label: 'Evaluated',
-      value: visitors.length,
+      value: evaluated,
       detail: `${visits.toLocaleString()} visits in the selected range. Filters select a visitor cohort.`,
     },
     {

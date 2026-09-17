@@ -11,11 +11,13 @@ export function AccountOverview({
   visitors,
   enabled = true,
   protectionMode = 'active',
+  rangeLabel = 'All recorded history',
   onView,
 }: {
   visitors: VisitorVM[];
   enabled?: boolean;
   protectionMode?: ProtectionMode;
+  rangeLabel?: string;
   onView: (view: 'all' | 'blocked' | 'review' | 'wasted') => void;
 }) {
   const available = enabled && visitors.length > 0;
@@ -24,9 +26,10 @@ export function AccountOverview({
   const stats = getSpendOverviewMetrics(base, visitors.length ? spend : EMPTY_SPEND);
   const paused = protectionMode === 'paused';
   const delta = lastChange ? `+$${(lastChange.cents / 100).toFixed(2)}` : undefined;
-  const scope = 'Recorded account snapshot · independent of table filters';
+  const scope = `${rangeLabel} · visitors active in this range · independent of table filters`;
   const spendScope =
-    'Recorded snapshot + simulated impact this demo session. Demo additions are not visitor records or included in exports.';
+    `${rangeLabel} + simulated impact this demo session. ` +
+    'Session additions persist across ranges; they are not visitor records or included in exports.';
 
   return (
     <section className={styles.statsOverview} aria-label="Threat monitoring summary">
@@ -38,7 +41,7 @@ export function AccountOverview({
             {running ? 'Spend demo' : 'Snapshot'}
           </span>
         </div>
-        <span>Visitor counts are recorded · money includes simulated impact</span>
+        <span>{rangeLabel} · recorded visitors + session spend demo</span>
       </header>
       <div className={styles.statsGrid}>
         <Stat
@@ -70,7 +73,7 @@ export function AccountOverview({
             rows: stats.decisionRows,
             note: paused
               ? 'Historical decisions are unchanged. All enforcement is currently paused in this demo.'
-              : 'Pending and failed exclusions are decisions, not confirmed blocks on every platform.',
+              : 'Current outcomes for visitors active in this range. Pending and failed exclusions are not confirmed blocks.',
             scope,
           }}
         />
@@ -107,7 +110,7 @@ export function AccountOverview({
             title: 'Recorded cost + simulated waste',
             rows: stats.wastedRows,
             note:
-              'Recorded rows show pre-block paid click cost, or paid cost so far if never blocked. ' +
+              'Recorded rows show paid click cost within the selected range, before a block or so far if never blocked. ' +
               'The simulated row grows only while protection is paused; it is illustrative, not a measured loss. ' +
               'USD · headline rounded.',
             scope: spendScope,
@@ -125,7 +128,7 @@ export function AccountOverview({
             title: 'Estimated + simulated protection',
             rows: stats.protectedRows,
             note:
-              'Snapshot estimate: 2.05× pre-block spend, capped at $280 per blocked visitor. ' +
+              'Snapshot estimate: 2.05× pre-block spend in the selected range, capped at the recorded visitor estimate. ' +
               'The separate simulated row grows only while protection is active. ' +
               'Neither is measured savings or recovered revenue. USD · headline rounded.',
             scope: spendScope,

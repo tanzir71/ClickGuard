@@ -18,7 +18,7 @@ afterEach(() => {
 describe('activity funnel', () => {
   it('preserves nested default counts and separates block decisions from completion', () => {
     const stages = getActivityFunnelStages(visitorViewModels, FIXED_NOW, 7);
-    expect(stages.map((stage) => stage.value)).toEqual([160, 155, 33, 17, 16]);
+    expect(stages.map((stage) => stage.value)).toEqual([111, 106, 20, 12, 11]);
     const eligible = visitorViewModels.filter(
       (visitor) =>
         visitor.riskScore >= Math.max(40, visitor.threshold) &&
@@ -37,10 +37,10 @@ describe('activity funnel', () => {
 
   it('calculates overall share and previous-stage continuation independently', () => {
     const metrics = getFunnelMetrics(getActivityFunnelStages(visitorViewModels, FIXED_NOW, 7));
-    expect(metrics[2].share).toBeCloseTo(33 / 160);
-    expect(metrics[2].continuation).toBeCloseTo(33 / 155);
+    expect(metrics[2].share).toBeCloseTo(20 / 111);
+    expect(metrics[2].continuation).toBeCloseTo(20 / 106);
     expect(metrics[0].continuation).toBeNull();
-    expect(formatFunnelPercent(metrics[1].share)).toBe('96.9%');
+    expect(formatFunnelPercent(metrics[1].share)).toBe('95.5%');
   });
 
   it('has safe empty, single-visitor, and flat profiles on a shared zero baseline', () => {
@@ -76,11 +76,11 @@ describe('activity funnel', () => {
   it('provides keyboard details, Escape dismissal, hover details, and an honest empty state', () => {
     const stages = getActivityFunnelStages(visitorViewModels, FIXED_NOW, 7);
     const { rerender, container } = render(
-      <ActivityFunnel stages={stages} filtered={160} total={160} rangeLabel="Last 7 days" />,
+      <ActivityFunnel stages={stages} filtered={111} total={111} rangeLabel="Last 7 days" />,
     );
-    const risk = screen.getByRole('button', { name: /At risk: 33 visitors/ });
+    const risk = screen.getByRole('button', { name: /At risk: 20 visitors/ });
     fireEvent.focus(risk);
-    expect(screen.getByRole('tooltip').textContent).toContain('21.3% of paid traffic visitors continue here');
+    expect(screen.getByRole('tooltip').textContent).toContain('18.9% of paid traffic visitors continue here');
     expect(risk.getAttribute('aria-describedby')).toBe(screen.getByRole('tooltip').id);
     fireEvent.keyDown(risk, { key: 'Escape' });
     expect(screen.queryByRole('tooltip')).toBeNull();
@@ -94,7 +94,7 @@ describe('activity funnel', () => {
       <ActivityFunnel
         stages={getActivityFunnelStages([], FIXED_NOW, 7)}
         filtered={0}
-        total={160}
+        total={111}
         rangeLabel="Last 7 days"
       />,
     );
@@ -117,8 +117,8 @@ describe('activity funnel', () => {
     ).toBeTruthy();
     const funnel = within(funnelRegion);
     fireEvent.change(screen.getByLabelText('Filter by risk'), { target: { value: 'high' } });
-    expect(funnel.getByRole('button', { name: /Evaluated: 19 visitors/ })).toBeDefined();
-    expect(funnel.getByRole('button', { name: /At risk: 17 visitors/ })).toBeDefined();
+    expect(funnel.getByRole('button', { name: /Evaluated: 14 visitors/ })).toBeDefined();
+    expect(funnel.getByRole('button', { name: /At risk: 12 visitors/ })).toBeDefined();
     fireEvent.click(screen.getByText('Last 7 days', { selector: 'summary' }));
     fireEvent.click(screen.getByRole('button', { name: 'Last 24 hours' }));
     expect(funnel.getAllByText(/Last 24 hours/).length).toBeGreaterThan(0);

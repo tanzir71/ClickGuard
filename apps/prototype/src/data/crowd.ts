@@ -51,7 +51,9 @@ export function createCrowd(count = 147): DataSet {
       { length: random() < 0.15 ? 3 + Math.floor(random() * 4) : 1 },
       (_, deviceIndex) => `fp_c${index}_${deviceIndex}`,
     );
-    const lastOffset = (index % 7) * 86400000 + Math.floor(random() * 10) * 3600000;
+    // Retain a busy recent week, plus deterministic older records for the 30-day view.
+    const daysAgo = index % 3 === 0 ? 8 + (index % 21) : index % 7;
+    const lastOffset = daysAgo * 86400000 + Math.floor(random() * 10) * 3600000;
     const gap = 25 * 60000 + Math.floor(random() * 8) * 3600000;
     const firstAt = NOW - lastOffset - (visitCount - 1) * gap;
     const platform: Platform = random() < 0.72 ? 'google_ads' : 'meta_ads';

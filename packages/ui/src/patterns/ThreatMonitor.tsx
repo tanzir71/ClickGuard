@@ -23,6 +23,7 @@ import {
 import type { ThreatMonitorProps, VisitVM, VisitorAction, VisitorStatus, VisitorVM } from '../model';
 import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows } from '../data';
 import { getActivityFunnelStages } from '../data/activityFunnel';
+import { getVisitorsInRange } from '../data/dateRange';
 import {
   DecisionRoute,
   ExclusionList,
@@ -178,9 +179,20 @@ export function ThreatMonitor({
     simulation,
   ]);
 
+  const rangeLabel = rangeDays === 1 ? 'Last 24 hours' : `Last ${rangeDays} days`;
+  const rangeVisitors = useMemo(
+    () => getVisitorsInRange(visitors, now, rangeDays),
+    [visitors, now, rangeDays],
+  );
+  const changeRange = (days: number) => {
+    setRangeDays(days);
+    setChecked(new Set());
+    setExpandedIp('');
+  };
+
   const filtered = useMemo(
     () =>
-      visitors.filter((visitor) => {
+      rangeVisitors.filter((visitor) => {
         if (simulation === 'empty') return false;
         const haystack = [
           visitor.ip,
@@ -202,8 +214,6 @@ export function ThreatMonitor({
         if (risk === 'elevated' && (visitor.riskScore < 40 || visitor.riskScore >= visitor.threshold))
           return false;
         if (risk === 'low' && visitor.riskScore >= 40) return false;
-        const cutoff = new Date(now).getTime() - rangeDays * 86400000;
-        if (!visitor.visits.some((visit) => new Date(visit.startedAt).getTime() >= cutoff)) return false;
         if (savedView === 'review' && !visitor.needsReview) return false;
         if (savedView === 'blocked' && !['blocked', 'pending', 'failed'].includes(visitor.status))
           return false;
@@ -211,7 +221,7 @@ export function ThreatMonitor({
         if (savedView === 'shared' && visitor.deviceCount < 3) return false;
         return true;
       }),
-    [visitors, simulation, search, status, paidOnly, platform, risk, rangeDays, savedView, now],
+    [rangeVisitors, simulation, search, status, paidOnly, platform, risk, savedView],
   );
 
   const activityFunnel = useMemo(
@@ -428,14 +438,14 @@ export function ThreatMonitor({
             <Button iconStart={<Download />} onClick={() => exportCsv(sorted)}>
               Export CSV
             </Button>
-            <Menu label={rangeDays === 1 ? 'Last 24 hours' : `Last ${rangeDays} days`}>
-              <button type="button" onClick={() => setRangeDays(1)}>
+            <Menu label={rangeLabel}>
+              <button type="button" onClick={() => changeRange(1)}>
                 Last 24 hours {rangeDays === 1 ? '✓' : ''}
               </button>
-              <button type="button" onClick={() => setRangeDays(7)}>
+              <button type="button" onClick={() => changeRange(7)}>
                 Last 7 days {rangeDays === 7 ? '✓' : ''}
               </button>
-              <button type="button" onClick={() => setRangeDays(30)}>
+              <button type="button" onClick={() => changeRange(30)}>
                 Last 30 days {rangeDays === 30 ? '✓' : ''}
               </button>
             </Menu>
@@ -453,7 +463,8 @@ export function ThreatMonitor({
         </div>
         {protectionPaused && <ProtectionPausedBanner onResume={() => setProtectionMode('active')} />}
         <AccountOverview
-          visitors={simulation === 'empty' ? emptyVisitors : visitors}
+          visitors={simulation === 'empty' ? emptyVisitors : rangeVisitors}
+          rangeLabel={rangeLabel}
           protectionMode={protectionMode}
           enabled={simulation !== 'error' && !loading}
           onView={(view) => {
@@ -586,8 +597,8 @@ export function ThreatMonitor({
           <ActivityFunnel
             stages={activityFunnel}
             filtered={filtered.length}
-            total={visitors.length}
-            rangeLabel={rangeDays === 1 ? 'Last 24 hours' : `Last ${rangeDays} days`}
+            total={rangeVisitors.length}
+            rangeLabel={rangeLabel}
           />
           {visitors.some((visitor) => visitor.status === 'failed') && (
             <div className={styles.outageBanner}>
@@ -665,9 +676,11 @@ export function ThreatMonitor({
                 <footer className={styles.tableFooter}>
                   <span>
                     Showing {viewMode === 'visitors' ? sorted.length : allVisits.length} {viewMode} · filtered
-                    from {visitors.length} visitors
+                    from {rangeVisitors.length} visitors in range
                   </span>
-                  <span>Priority sort · Last 7 days</span>
+                  <span>
+                    {sort.key} · {sort.direction} · {rangeLabel}
+                  </span>
                 </footer>
               )}
             </section>
@@ -831,7 +844,7 @@ function VisitorTable({
             <b>Journeys</b> · risk 0–100 · first → last visit
           </span>
           <span>● Paid &nbsp; ○ Unpaid &nbsp; ◆ Block decision &nbsp; ▪ Conversion &nbsp; ┄ Threshold</span>
-          <span>Full history · hover or use ← → to explore</span>
+          <span>Selected range · current risk/status · full history in visitor details</span>
         </caption>
         <thead>
           <tr>
@@ -1021,7 +1034,7 @@ function VisitorRow({
         <td className={styles.numericCell}>
           <strong>{relativeTime(visitor.lastSeen)}</strong>
           <small>
-            {shortTime(visitor.firstSeen)} → {shortTime(visitor.lastSeen)}
+            {shortTime(visitor.visits[0]?.startedAt ?? visitor.firstSeen)} → {shortTime(visitor.lastSeen)}
           </small>
         </td>
         <td>
