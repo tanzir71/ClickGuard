@@ -1,9 +1,17 @@
 import type { VisitorStatus, VisitorVM } from '../model';
 import type { StatBreakdownRow } from './Stat';
 
-const isBlockDecision = (status: VisitorStatus) => status === 'blocked' || status === 'pending' || status === 'failed';
-const money = (value: number) => value.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const withMoney = (rows: StatBreakdownRow[]) => rows.map((row) => ({ ...row, displayValue: money(row.value) }));
+const isBlockDecision = (status: VisitorStatus) =>
+  status === 'blocked' || status === 'pending' || status === 'failed';
+const money = (value: number) =>
+  value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+const withMoney = (rows: StatBreakdownRow[]) =>
+  rows.map((row) => ({ ...row, displayValue: money(row.value) }));
 
 /** Account-wide totals: each breakdown is a disjoint partition of its headline. */
 export function getOverviewMetrics(visitors: VisitorVM[]) {
@@ -29,12 +37,23 @@ export function getOverviewMetrics(visitors: VisitorVM[]) {
   for (const visitor of visitors) {
     const spendBucket = isBlockDecision(visitor.status) ? 0 : visitor.status === 'monitoring' ? 1 : 2;
     wasted[spendBucket].value += visitor.wastedSpend;
-    const networkBucket = ['datacenter', 'vpn', 'proxy', 'tor'].includes(visitor.networkType) ? 0 : visitor.networkType === 'residential' ? 1 : 2;
+    const networkBucket = ['datacenter', 'vpn', 'proxy', 'tor'].includes(visitor.networkType)
+      ? 0
+      : visitor.networkType === 'residential'
+        ? 1
+        : 2;
     protectedSpend[networkBucket].value += visitor.protectedSpendEst;
   }
   return {
-    visitors: visitors.length, paid, blocked, pending, failed, decisions: blocked + pending + failed, review: review.length,
-    wasted: wasted.reduce((sum, row) => sum + row.value, 0), protected: protectedSpend.reduce((sum, row) => sum + row.value, 0),
+    visitors: visitors.length,
+    paid,
+    blocked,
+    pending,
+    failed,
+    decisions: blocked + pending + failed,
+    review: review.length,
+    wasted: wasted.reduce((sum, row) => sum + row.value, 0),
+    protected: protectedSpend.reduce((sum, row) => sum + row.value, 0),
     trafficRows: [
       { label: 'With paid traffic', value: paid, tone: 'default' },
       { label: 'Unpaid traffic only', value: visitors.length - paid, tone: 'muted' },
@@ -48,8 +67,11 @@ export function getOverviewMetrics(visitors: VisitorVM[]) {
       { label: 'Monitoring', value: reviewMonitoring, tone: 'warning' },
       { label: 'Exclusion failed', value: reviewFailed, tone: 'danger' },
       { label: 'Unreviewed blocks', value: reviewBlocked, tone: 'default' },
-      ...(reviewOther ? [{ label: 'Other flagged visitors', value: reviewOther, tone: 'muted' as const }] : []),
+      ...(reviewOther
+        ? [{ label: 'Other flagged visitors', value: reviewOther, tone: 'muted' as const }]
+        : []),
     ] satisfies StatBreakdownRow[],
-    wastedRows: withMoney(wasted), protectedRows: withMoney(protectedSpend),
+    wastedRows: withMoney(wasted),
+    protectedRows: withMoney(protectedSpend),
   };
 }

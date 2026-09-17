@@ -1,16 +1,37 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { ActivityFunnel, formatFunnelPercent, getActivityFunnelStages, getFunnelMetrics, getFunnelProfile, ThreatMonitor } from '@clickguard/ui';
+import {
+  ActivityFunnel,
+  formatFunnelPercent,
+  getActivityFunnelStages,
+  getFunnelMetrics,
+  getFunnelProfile,
+  ThreatMonitor,
+} from '@clickguard/ui';
 import { FIXED_NOW, visitorViewModels } from '.';
 
-afterEach(() => { cleanup(); window.history.replaceState({}, '', '/'); });
+afterEach(() => {
+  cleanup();
+  window.history.replaceState({}, '', '/');
+});
 
 describe('activity funnel', () => {
   it('preserves nested default counts and separates block decisions from completion', () => {
     const stages = getActivityFunnelStages(visitorViewModels, FIXED_NOW, 7);
     expect(stages.map((stage) => stage.value)).toEqual([160, 155, 33, 17, 16]);
-    const eligible = visitorViewModels.filter((visitor) => visitor.riskScore >= Math.max(40, visitor.threshold) && visitor.visits.some((visit) => visit.source === 'paid' && new Date(visit.startedAt).getTime() >= new Date(FIXED_NOW).getTime() - 7 * 86400000));
-    for (const status of ['blocked', 'pending', 'failed']) expect(stages[4].detail).toContain(`${eligible.filter((visitor) => visitor.status === status).length} ${status}`);
+    const eligible = visitorViewModels.filter(
+      (visitor) =>
+        visitor.riskScore >= Math.max(40, visitor.threshold) &&
+        visitor.visits.some(
+          (visit) =>
+            visit.source === 'paid' &&
+            new Date(visit.startedAt).getTime() >= new Date(FIXED_NOW).getTime() - 7 * 86400000,
+        ),
+    );
+    for (const status of ['blocked', 'pending', 'failed'])
+      expect(stages[4].detail).toContain(
+        `${eligible.filter((visitor) => visitor.status === status).length} ${status}`,
+      );
     expect(stages[4].label).toBe('Block decision');
   });
 
@@ -36,16 +57,27 @@ describe('activity funnel', () => {
   it('keeps every date-window funnel nested and excludes out-of-range paid traffic', () => {
     for (const range of [1, 7, 30]) {
       const cutoff = new Date(FIXED_NOW).getTime() - range * 86400000;
-      const cohort = visitorViewModels.filter((visitor) => visitor.visits.some((visit) => new Date(visit.startedAt).getTime() >= cutoff));
+      const cohort = visitorViewModels.filter((visitor) =>
+        visitor.visits.some((visit) => new Date(visit.startedAt).getTime() >= cutoff),
+      );
       const stages = getActivityFunnelStages(cohort, FIXED_NOW, range);
-      expect(stages[1].value).toBe(cohort.filter((visitor) => visitor.visits.some((visit) => visit.source === 'paid' && new Date(visit.startedAt).getTime() >= cutoff)).length);
-      for (let index = 1; index < stages.length; index++) expect(stages[index].value).toBeLessThanOrEqual(stages[index - 1].value);
+      expect(stages[1].value).toBe(
+        cohort.filter((visitor) =>
+          visitor.visits.some(
+            (visit) => visit.source === 'paid' && new Date(visit.startedAt).getTime() >= cutoff,
+          ),
+        ).length,
+      );
+      for (let index = 1; index < stages.length; index++)
+        expect(stages[index].value).toBeLessThanOrEqual(stages[index - 1].value);
     }
   });
 
   it('provides keyboard details, Escape dismissal, hover details, and an honest empty state', () => {
     const stages = getActivityFunnelStages(visitorViewModels, FIXED_NOW, 7);
-    const { rerender, container } = render(<ActivityFunnel stages={stages} filtered={160} total={160} rangeLabel="Last 7 days" />);
+    const { rerender, container } = render(
+      <ActivityFunnel stages={stages} filtered={160} total={160} rangeLabel="Last 7 days" />,
+    );
     const risk = screen.getByRole('button', { name: /At risk: 33 visitors/ });
     fireEvent.focus(risk);
     expect(screen.getByRole('tooltip').textContent).toContain('21.3% of paid traffic visitors continue here');
@@ -58,7 +90,14 @@ describe('activity funnel', () => {
     expect(screen.getByRole('tooltip').textContent).toContain('completed platform exclusion');
     fireEvent.mouseLeave(blocked.closest('li')!);
     expect(screen.queryByRole('tooltip')).toBeNull();
-    rerender(<ActivityFunnel stages={getActivityFunnelStages([], FIXED_NOW, 7)} filtered={0} total={160} rangeLabel="Last 7 days" />);
+    rerender(
+      <ActivityFunnel
+        stages={getActivityFunnelStages([], FIXED_NOW, 7)}
+        filtered={0}
+        total={160}
+        rangeLabel="Last 7 days"
+      />,
+    );
     expect(screen.getByText('No visitors match the current filters')).toBeDefined();
     expect(container.textContent).not.toMatch(/NaN|Infinity/);
     expect(container.querySelectorAll('svg path')).toHaveLength(1);
@@ -71,7 +110,11 @@ describe('activity funnel', () => {
     const funnelRegion = resultsGroup.getByRole('region', { name: 'Traffic evaluation' });
     const filters = resultsGroup.getByRole('region', { name: 'Filters' });
     expect(filters.nextElementSibling).toBe(funnelRegion);
-    expect(funnelRegion.compareDocumentPosition(resultsGroup.getByRole('table', { name: 'Threat monitoring results' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      funnelRegion.compareDocumentPosition(
+        resultsGroup.getByRole('table', { name: 'Threat monitoring results' }),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     const funnel = within(funnelRegion);
     fireEvent.change(screen.getByLabelText('Filter by risk'), { target: { value: 'high' } });
     expect(funnel.getByRole('button', { name: /Evaluated: 19 visitors/ })).toBeDefined();

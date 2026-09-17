@@ -1,25 +1,49 @@
 import { useState } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { FullJourney, buildJourneyNarrative, describeJourneyVisit, keyRecordedEvents, type JourneyTab, type VisitorVM } from '@clickguard/ui';
+import {
+  FullJourney,
+  buildJourneyNarrative,
+  describeJourneyVisit,
+  keyRecordedEvents,
+  type JourneyTab,
+  type VisitorVM,
+} from '@clickguard/ui';
 import { visitorViewModels } from '.';
 
 const hero = (ip: string) => visitorViewModels.find((visitor) => visitor.ip === ip)!;
 const blocked = hero('185.220.101.4');
-beforeAll(() => Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() }));
+beforeAll(() =>
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() }),
+);
 afterEach(cleanup);
 
 function JourneyHarness({ visitor = blocked }: { visitor?: VisitorVM }) {
   const [selected, setSelected] = useState(visitor.blockedAtVisitId ?? visitor.visits.at(-1)?.id ?? '');
   const [tab, setTab] = useState<JourneyTab>('score');
-  return <FullJourney visitor={visitor} selectedVisitId={selected} setSelectedVisitId={setSelected} tab={tab} setTab={setTab} onBack={() => {}} onAllow={() => {}} />;
+  return (
+    <FullJourney
+      visitor={visitor}
+      selectedVisitId={selected}
+      setSelectedVisitId={setSelected}
+      tab={tab}
+      setTab={setTab}
+      onBack={() => {}}
+      onAllow={() => {}}
+    />
+  );
 }
 
 describe('story-led full journey', () => {
   it('derives the blocked story from actual visits without mutating input', () => {
     const story = buildJourneyNarrative({ ...blocked, visits: [...blocked.visits].reverse() });
     expect(story.headline).toBe('A block decision after 5 paid visits.');
-    expect(story.chapters.map((chapter) => chapter.kind)).toEqual(['arrival', 'pattern', 'decision', 'after']);
+    expect(story.chapters.map((chapter) => chapter.kind)).toEqual([
+      'arrival',
+      'pattern',
+      'decision',
+      'after',
+    ]);
     expect(story.chapters[2].detail).toBe('Risk 58 → 100 · threshold 70');
     expect(story.chapters[3].detail).toBe('0 paid · 6 unpaid returns');
     expect(story.noInteraction).toBe(3);
@@ -61,7 +85,9 @@ describe('story-led full journey', () => {
     expect(screen.queryByRole('tabpanel')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Arrived via Direct traffic. Inspect visit' }));
     expect(screen.getByRole('article', { name: 'Visit 1 overview' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Visit 1, score 34' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Visit 1, score 34' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Block decision at visit 6. Inspect visit' }));
     expect(screen.getByRole('heading', { name: 'The visit that triggered a block decision' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Why this score?' }));
@@ -78,7 +104,11 @@ describe('story-led full journey', () => {
     const sequence = screen.getByRole('list', { name: 'Visit story' });
     const stages = within(sequence).getAllByRole('listitem');
     expect(stages).toHaveLength(3);
-    expect(stages.map((stage) => stage.querySelector('header')?.textContent)).toEqual(['01Arrival', '02On the site', '03Result']);
+    expect(stages.map((stage) => stage.querySelector('header')?.textContent)).toEqual([
+      '01Arrival',
+      '02On the site',
+      '03Result',
+    ]);
     expect(sequence.querySelectorAll('svg[class*="sequenceConnector"][aria-hidden="true"]')).toHaveLength(2);
     expect(within(sequence).queryByRole('button')).toBeNull();
     expect(stages[0].textContent).toContain('Click cost$4.10');
@@ -89,7 +119,19 @@ describe('story-led full journey', () => {
   });
 
   it('keeps unavailable behavior and unknown click cost explicit in the flow', () => {
-    render(<JourneyHarness visitor={{ ...blocked, visits: blocked.visits.map((visit) => ({ ...visit, jsExecuted: false, cpc: undefined, events: [] })) }} />);
+    render(
+      <JourneyHarness
+        visitor={{
+          ...blocked,
+          visits: blocked.visits.map((visit) => ({
+            ...visit,
+            jsExecuted: false,
+            cpc: undefined,
+            events: [],
+          })),
+        }}
+      />,
+    );
     const sequence = screen.getByRole('list', { name: 'Visit story' });
     expect(within(sequence).getByText('Not recorded')).toBeTruthy();
     expect(within(sequence).getByText('Behavior unavailable')).toBeTruthy();

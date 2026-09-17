@@ -26,24 +26,36 @@ export function advanceSpend(state: SpendSimulation, mode: ProtectionMode): Spen
 export function parseSpend(raw: string | null): SpendSimulation {
   try {
     const value = JSON.parse(raw ?? 'null') as Partial<SpendSimulation> | null;
-    if (value && [value.tick, value.wastedCents, value.protectedCents].every(
-      (number) => typeof number === 'number' && Number.isSafeInteger(number) && number >= 0,
-    )) return { tick: value.tick!, wastedCents: value.wastedCents!, protectedCents: value.protectedCents! };
-  } catch { /* Invalid or old storage starts a fresh demo. */ }
+    if (
+      value &&
+      [value.tick, value.wastedCents, value.protectedCents].every(
+        (number) => typeof number === 'number' && Number.isSafeInteger(number) && number >= 0,
+      )
+    )
+      return { tick: value.tick!, wastedCents: value.wastedCents!, protectedCents: value.protectedCents! };
+  } catch {
+    /* Invalid or old storage starts a fresh demo. */
+  }
   return { ...EMPTY_SPEND };
 }
 
 export function getSpendOverviewMetrics(base: ReturnType<typeof getOverviewMetrics>, spend: SpendSimulation) {
   const row = (label: string, cents: number, tone: StatBreakdownRow['tone']): StatBreakdownRow => ({
-    label, value: cents / 100, tone,
+    label,
+    value: cents / 100,
+    tone,
     displayValue: (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
   });
   const wastedRows = [...base.wastedRows, row('Simulated waste while paused', spend.wastedCents, 'danger')];
-  const protectedRows = [...base.protectedRows, row('Simulated protection while active', spend.protectedCents, 'success')];
+  const protectedRows = [
+    ...base.protectedRows,
+    row('Simulated protection while active', spend.protectedCents, 'success'),
+  ];
   return {
     ...base,
     wasted: wastedRows.reduce((total, item) => total + item.value, 0),
     protected: protectedRows.reduce((total, item) => total + item.value, 0),
-    wastedRows, protectedRows,
+    wastedRows,
+    protectedRows,
   };
 }

@@ -1,0 +1,5 @@
+**/dist/**
+**/storybook-static/**
+**/.vercel/**
+**/coverage/**
+pnpm-lock.yaml

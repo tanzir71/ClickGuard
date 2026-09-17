@@ -3,7 +3,9 @@ import { ScoreWaterfall } from '../domain';
 import { visits } from './fixtures';
 
 const meta = {
-  title: 'Domain/ScoreWaterfall', component: ScoreWaterfall, tags: ['autodocs'],
+  title: 'Domain/ScoreWaterfall',
+  component: ScoreWaterfall,
+  tags: ['autodocs'],
   args: { visit: visits[5], threshold: 70, journey: visits },
 } satisfies Meta<typeof ScoreWaterfall>;
 export default meta;

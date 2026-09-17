@@ -5,17 +5,25 @@ import { FIXED_NOW, visitorViewModels } from '.';
 
 afterEach(cleanup);
 const blocked = visitorViewModels.find((visitor) => visitor.ip === '185.220.101.4')!;
-const sample = (scores: number[], offsets = scores.map((_, index) => index * 60000)): VisitVM[] => scores.map((score, index) => ({
-  ...blocked.visits[0], id: `risk_${index}`, startedAt: new Date(Date.parse(FIXED_NOW) + offsets[index]).toISOString(),
-  scoreBefore: scores[index - 1] ?? 0, scoreAfter: score, afterBlock: false,
-}));
+const sample = (scores: number[], offsets = scores.map((_, index) => index * 60000)): VisitVM[] =>
+  scores.map((score, index) => ({
+    ...blocked.visits[0],
+    id: `risk_${index}`,
+    startedAt: new Date(Date.parse(FIXED_NOW) + offsets[index]).toISOString(),
+    scoreBefore: scores[index - 1] ?? 0,
+    scoreAfter: score,
+    afterBlock: false,
+  }));
 
 describe('detailed risk chart', () => {
   it.each(['panel', 'wide'] as const)('keeps sharp step corners between markers in the %s chart', (size) => {
-    const { container } = render(<RiskChart visits={sample([25, 75, 50])} threshold={70} blockedAtVisitId="risk_1" size={size} />);
+    const { container } = render(
+      <RiskChart visits={sample([25, 75, 50])} threshold={70} blockedAtVisitId="risk_1" size={size} />,
+    );
     const before = container.querySelector('path[class*="chartLine"]')!.getAttribute('d')!;
     const after = container.querySelector('path[class*="chartAfterLine"]')!.getAttribute('d')!;
-    const [middleX, cornerX, nextCornerX, rightX] = size === 'wide' ? [390, 211, 569, 748] : [200, 116, 284, 368];
+    const [middleX, cornerX, nextCornerX, rightX] =
+      size === 'wide' ? [390, 211, 569, 748] : [200, 116, 284, 368];
     expect(before).toContain(`H ${cornerX} V`);
     expect(before.endsWith(`H ${middleX}`)).toBe(true);
     expect(after).toContain(`H ${nextCornerX} V`);
@@ -28,16 +36,29 @@ describe('detailed risk chart', () => {
     const { container } = render(<RiskChart visits={[visits[2], visits[0], visits[1]]} threshold={70} />);
     const circles = screen.getAllByRole('button').map((button) => button.querySelector('circle')!);
     expect(circles.map((circle) => Number(circle.getAttribute('cx')))).toEqual([32, 65.6, 368]);
-    circles.forEach((circle, index) => expect(Number(circle.getAttribute('cy'))).toBeCloseTo([123.6, 98.8, 24.4][index]));
-    expect(Number(container.querySelector('line[class*="chartThreshold"]')?.getAttribute('y1'))).toBeCloseTo(49.2);
+    circles.forEach((circle, index) =>
+      expect(Number(circle.getAttribute('cy'))).toBeCloseTo([123.6, 98.8, 24.4][index]),
+    );
+    expect(Number(container.querySelector('line[class*="chartThreshold"]')?.getAttribute('y1'))).toBeCloseTo(
+      49.2,
+    );
     expect(screen.getByText('Block threshold · 70')).toBeTruthy();
     expect(screen.getByText('Time →')).toBeTruthy();
     expect(visits[0].scoreAfter).toBe(10);
   });
 
   it('separates the decision from post-decision activity and preserves external selection', () => {
-    const { container } = render(<RiskChart visits={blocked.visits} threshold={70} blockedAtVisitId={blocked.blockedAtVisitId} selectedVisitId={blocked.visits[0].id} />);
-    expect(screen.getByRole('button', { name: 'Visit 1, score 34' }).getAttribute('aria-pressed')).toBe('true');
+    const { container } = render(
+      <RiskChart
+        visits={blocked.visits}
+        threshold={70}
+        blockedAtVisitId={blocked.blockedAtVisitId}
+        selectedVisitId={blocked.visits[0].id}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Visit 1, score 34' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
     expect(screen.getByRole('button', { name: 'Visit 6, score 100' }).querySelector('path')).not.toBeNull();
     expect(container.querySelector('path[class*="chartAfterLine"]')?.getAttribute('d')).toContain('H');
     fireEvent.mouseEnter(screen.getByRole('button', { name: 'Visit 6, score 100' }));
@@ -48,8 +69,13 @@ describe('detailed risk chart', () => {
   });
 
   it('has one tab stop, previews with arrows, and selects with Enter or Space without bubbling', () => {
-    const onSelect = vi.fn(); const onParentKey = vi.fn();
-    const { container } = render(<div onKeyDown={onParentKey}><RiskChart visits={sample([10, 45, 78])} threshold={70} onSelectVisit={onSelect} /></div>);
+    const onSelect = vi.fn();
+    const onParentKey = vi.fn();
+    const { container } = render(
+      <div onKeyDown={onParentKey}>
+        <RiskChart visits={sample([10, 45, 78])} threshold={70} onSelectVisit={onSelect} />
+      </div>,
+    );
     expect(container.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
     const last = screen.getByRole('button', { name: 'Visit 3, score 78' });
     act(() => last.focus());
@@ -68,7 +94,12 @@ describe('detailed risk chart', () => {
   });
 
   it('does not invent a block decision for high unpaid risk', () => {
-    const { container } = render(<RiskChart visits={sample([35, 80, 88]).map((visit) => ({ ...visit, source: 'organic' as const }))} threshold={70} />);
+    const { container } = render(
+      <RiskChart
+        visits={sample([35, 80, 88]).map((visit) => ({ ...visit, source: 'organic' as const }))}
+        threshold={70}
+      />,
+    );
     expect(screen.queryByText('Decision')).toBeNull();
     expect(screen.queryByText('After decision')).toBeNull();
     expect(container.querySelector('path[class*="chartAfterLine"]')).toBeNull();
@@ -81,10 +112,19 @@ describe('detailed risk chart', () => {
     expect(screen.getByText('Only visit so far')).toBeTruthy();
     expect(screen.getByRole('button').querySelector('circle')?.getAttribute('cx')).toBe('200');
     rerender(<RiskChart visits={sample([60, 20], [0, 0])} threshold={100} blockedAtVisitId="risk_1" />);
-    expect(container.querySelector('path[class*="chartLine"]')?.getAttribute('d')).not.toMatch(/NaN|Infinity/);
+    expect(container.querySelector('path[class*="chartLine"]')?.getAttribute('d')).not.toMatch(
+      /NaN|Infinity/,
+    );
     expect(screen.getByText('Block decision')).toBeTruthy();
     expect(container.querySelector('path[class*="chartAfterLine"]')).toBeNull();
-    rerender(<RiskChart visits={sample(Array.from({ length: 60 }, (_, index) => index + 30))} threshold={85} blockedAtVisitId="risk_40" size="wide" />);
+    rerender(
+      <RiskChart
+        visits={sample(Array.from({ length: 60 }, (_, index) => index + 30))}
+        threshold={85}
+        blockedAtVisitId="risk_40"
+        size="wide"
+      />,
+    );
     expect(screen.getAllByRole('button')).toHaveLength(60);
     expect(container.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
     const decision = screen.getByRole('button', { name: 'Visit 41, score 70' });

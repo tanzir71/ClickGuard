@@ -3,11 +3,21 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { buildVisitJourney, VisitRibbon, ThreatMonitor, type VisitVM } from '@clickguard/ui';
 import { FIXED_NOW, visitorViewModels } from '.';
 
-afterEach(() => { cleanup(); window.history.replaceState({}, '', '/'); });
+afterEach(() => {
+  cleanup();
+  window.history.replaceState({}, '', '/');
+});
 const blocked = visitorViewModels.find((visitor) => visitor.ip === '185.220.101.4')!;
-const sample = (scores: number[], offsets: number[] = scores.map((_, index) => index * 60000)): VisitVM[] => scores.map((score, index) => ({
-  ...blocked.visits[0], source: 'paid', id: `test_${index}`, startedAt: new Date(Date.parse(FIXED_NOW) + offsets[index]).toISOString(), scoreBefore: scores[index - 1] ?? 0, scoreAfter: score, afterBlock: false,
-}));
+const sample = (scores: number[], offsets: number[] = scores.map((_, index) => index * 60000)): VisitVM[] =>
+  scores.map((score, index) => ({
+    ...blocked.visits[0],
+    source: 'paid',
+    id: `test_${index}`,
+    startedAt: new Date(Date.parse(FIXED_NOW) + offsets[index]).toISOString(),
+    scoreBefore: scores[index - 1] ?? 0,
+    scoreAfter: score,
+    afterBlock: false,
+  }));
 
 describe('table risk journeys', () => {
   it('uses real time spacing and a shared 0–100 risk scale, without mutating visits', () => {
@@ -41,7 +51,11 @@ describe('table risk journeys', () => {
     expect(decline.points.every((point) => point.x === 91)).toBe(true);
     expect(decline.points[1].y).toBeGreaterThan(decline.points[0].y);
     expect(decline.beforePath).not.toMatch(/NaN|Infinity/);
-    const dense = buildVisitJourney(sample(Array.from({ length: 60 }, (_, index) => index + 30)), 70, 'test_40');
+    const dense = buildVisitJourney(
+      sample(Array.from({ length: 60 }, (_, index) => index + 30)),
+      70,
+      'test_40',
+    );
     expect(dense.points).toHaveLength(60);
     expect(dense.markers.length).toBeLessThan(25);
     expect(dense.markers.some((point) => point.visit.id === 'test_40')).toBe(true);
@@ -50,7 +64,11 @@ describe('table risk journeys', () => {
 
   it('keeps right-angle corners between unchanged visit markers', () => {
     const chart = buildVisitJourney(sample([10, 30, 20]), 70, 'test_1');
-    expect(chart.points.map(({ x, y }) => [x, y])).toEqual([[8, 33.8], [91, 27.4], [174, 30.6]]);
+    expect(chart.points.map(({ x, y }) => [x, y])).toEqual([
+      [8, 33.8],
+      [91, 27.4],
+      [174, 30.6],
+    ]);
     expect(chart.beforePath).toBe('M 8 37 V 33.8 H 49.5 V 33.8 V 27.4 H 91');
     expect(chart.afterPath).toBe('M 91 27.4 H 132.5 V 27.4 V 30.6 H 174');
     expect((chart.beforePath + chart.afterPath).replace(/[MHV\d.\s-]/g, '')).toBe('');
@@ -58,8 +76,15 @@ describe('table risk journeys', () => {
 
   it('uses distinct marker shapes, and supports one tab stop with keyboard visit drill-down', () => {
     const onOpen = vi.fn();
-    const visits = sample([10, 35, 75, 45]).map((visit, index) => ({ ...visit, source: index === 3 ? 'organic' as const : 'paid' as const, conversion: index === 3 ? { type: 'purchase' } : undefined, afterBlock: index === 3 }));
-    const { container } = render(<VisitRibbon visits={visits} blockedAtVisitId="test_2" onDotClick={onOpen} />);
+    const visits = sample([10, 35, 75, 45]).map((visit, index) => ({
+      ...visit,
+      source: index === 3 ? ('organic' as const) : ('paid' as const),
+      conversion: index === 3 ? { type: 'purchase' } : undefined,
+      afterBlock: index === 3,
+    }));
+    const { container } = render(
+      <VisitRibbon visits={visits} blockedAtVisitId="test_2" onDotClick={onOpen} />,
+    );
     const chart = screen.getByRole('button', { name: /4 visit journey/ });
     expect(screen.getAllByRole('button')).toHaveLength(1);
     expect(container.querySelector('[data-kind="decision"] path')).not.toBeNull();

@@ -2,8 +2,17 @@ import { StrictMode } from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import {
-  AccountOverview, advanceSpend, EMPTY_SPEND, getOverviewMetrics, getSpendOverviewMetrics, parseSpend,
-  PROTECTION_STORAGE_KEY, SPEND_STORAGE_KEY, SPEND_TICK_MS, Stat, ThreatMonitor,
+  AccountOverview,
+  advanceSpend,
+  EMPTY_SPEND,
+  getOverviewMetrics,
+  getSpendOverviewMetrics,
+  parseSpend,
+  PROTECTION_STORAGE_KEY,
+  SPEND_STORAGE_KEY,
+  SPEND_TICK_MS,
+  Stat,
+  ThreatMonitor,
 } from '@clickguard/ui';
 import { FIXED_NOW, visitorViewModels } from '.';
 
@@ -12,8 +21,18 @@ const dialogPrototype = HTMLDialogElement.prototype;
 const originalShow = Object.getOwnPropertyDescriptor(dialogPrototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(dialogPrototype, 'close');
 beforeAll(() => {
-  Object.defineProperty(dialogPrototype, 'showModal', { configurable: true, value() { this.setAttribute('open', ''); } });
-  Object.defineProperty(dialogPrototype, 'close', { configurable: true, value() { this.removeAttribute('open'); } });
+  Object.defineProperty(dialogPrototype, 'showModal', {
+    configurable: true,
+    value() {
+      this.setAttribute('open', '');
+    },
+  });
+  Object.defineProperty(dialogPrototype, 'close', {
+    configurable: true,
+    value() {
+      this.removeAttribute('open');
+    },
+  });
 });
 afterAll(() => {
   if (originalShow) Object.defineProperty(dialogPrototype, 'showModal', originalShow);
@@ -22,10 +41,16 @@ afterAll(() => {
   else Reflect.deleteProperty(dialogPrototype, 'close');
 });
 afterEach(() => {
-  cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); sessionStorage.clear();
+  cleanup();
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+  sessionStorage.clear();
   window.history.replaceState({}, '', '/');
 });
-const tick = () => act(() => { vi.advanceTimersByTime(SPEND_TICK_MS); });
+const tick = () =>
+  act(() => {
+    vi.advanceTimersByTime(SPEND_TICK_MS);
+  });
 const storedSpend = () => parseSpend(sessionStorage.getItem(SPEND_STORAGE_KEY));
 const card = (label: string) => screen.getByRole('button', { name: new RegExp('^' + label + ':') });
 const headline = (label: string) => card(label).getAttribute('aria-label');
@@ -54,18 +79,26 @@ describe('protection-aware spend demo', () => {
     for (let index = 0; index < 100; index++) {
       spend = advanceSpend(spend, index % 3 ? 'paused' : 'active');
       const stats = getSpendOverviewMetrics(base, spend);
-      expect([stats.visitors, stats.paid, stats.decisions, stats.review]).toEqual(
-        [base.visitors, base.paid, base.decisions, base.review],
-      );
+      expect([stats.visitors, stats.paid, stats.decisions, stats.review]).toEqual([
+        base.visitors,
+        base.paid,
+        base.decisions,
+        base.review,
+      ]);
       expect(stats.wastedRows.reduce((sum, row) => sum + row.value, 0)).toBe(stats.wasted);
       expect(stats.protectedRows.reduce((sum, row) => sum + row.value, 0)).toBe(stats.protected);
     }
     expect(JSON.stringify(base)).toBe(original);
   });
 
-  it.each([null, 'broken', '[]', 'null', '{"tick":-1,"wastedCents":2,"protectedCents":3}', '{"tick":0,"wastedCents":"2","protectedCents":3}'])(
-    'safely rejects invalid session data: %s', (raw) => expect(parseSpend(raw)).toEqual(EMPTY_SPEND),
-  );
+  it.each([
+    null,
+    'broken',
+    '[]',
+    'null',
+    '{"tick":-1,"wastedCents":2,"protectedCents":3}',
+    '{"tick":0,"wastedCents":"2","protectedCents":3}',
+  ])('safely rejects invalid session data: %s', (raw) => expect(parseSpend(raw)).toEqual(EMPTY_SPEND));
 
   it('grows Protected while active; paused grows Wasted and keeps live hover rows synchronized', () => {
     vi.useFakeTimers();
@@ -100,7 +133,10 @@ describe('protection-aware spend demo', () => {
     const dialog = openPause();
     expect(document.activeElement).toBe(dialog.getByRole('button', { name: 'Keep protection on' }));
     expect(dialog.getByText(/including existing exclusions/)).toBeDefined();
-    fireEvent.keyDown(dialog.getByRole('button', { name: 'Keep protection on' }), { key: 'Tab', shiftKey: true });
+    fireEvent.keyDown(dialog.getByRole('button', { name: 'Keep protection on' }), {
+      key: 'Tab',
+      shiftKey: true,
+    });
     expect(document.activeElement).toBe(dialog.getByRole('button', { name: 'Pause all protection' }));
     fireEvent.keyDown(document.activeElement!, { key: 'Tab' });
     expect(document.activeElement).toBe(dialog.getByRole('button', { name: 'Keep protection on' }));
@@ -122,7 +158,11 @@ describe('protection-aware spend demo', () => {
     tick();
     expect(storedSpend().wastedCents).toBe(240);
     expect(storedSpend().protectedCents).toBe(0);
-    fireEvent.click(within(screen.getByRole('region', { name: 'Protection warning' })).getByRole('button', { name: 'Resume protection' }));
+    fireEvent.click(
+      within(screen.getByRole('region', { name: 'Protection warning' })).getByRole('button', {
+        name: 'Resume protection',
+      }),
+    );
     expect(screen.queryByRole('region', { name: 'Protection warning' })).toBeNull();
     tick();
     expect(storedSpend()).toEqual({ tick: 2, wastedCents: 240, protectedCents: 320 });
@@ -148,9 +188,15 @@ describe('protection-aware spend demo', () => {
     const panel = within(screen.getByRole('complementary'));
     expect((panel.getByRole('button', { name: 'Block now' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select 72.14.201.88' }));
-    expect(screen.getAllByRole('button', { name: 'Block now' }).every(button => (button as HTMLButtonElement).disabled)).toBe(true);
+    expect(
+      screen
+        .getAllByRole('button', { name: 'Block now' })
+        .every((button) => (button as HTMLButtonElement).disabled),
+    ).toBe(true);
     fireEvent.click(screen.getByText('185.220.101.4', { exact: true }));
-    expect(within(screen.getByRole('complementary')).getByRole('button', { name: 'Always allow this IP' })).toBeDefined();
+    expect(
+      within(screen.getByRole('complementary')).getByRole('button', { name: 'Always allow this IP' }),
+    ).toBeDefined();
     expect(within(screen.getByRole('complementary')).getAllByText('Ⅱ Protection paused')).toHaveLength(2);
     expect(sample[0].status).toBe('blocked');
   });
@@ -158,7 +204,9 @@ describe('protection-aware spend demo', () => {
   it('persists paused mode and both amounts across remounts without replaying elapsed time', () => {
     vi.useFakeTimers();
     const initial = render(<ThreatMonitor visitors={sample} now={FIXED_NOW} />);
-    tick(); confirmPause(); tick();
+    tick();
+    confirmPause();
+    tick();
     const before = storedSpend();
     initial.unmount();
     act(() => vi.advanceTimersByTime(60000));
@@ -184,21 +232,30 @@ describe('protection-aware spend demo', () => {
     expect(storedSpend().tick).toBe(2);
   });
 
-  it.each([{ visitors: [], enabled: true }, { visitors: sample, enabled: false }])(
-    'does not accumulate for an empty or disabled overview', (props) => {
-      vi.useFakeTimers();
-      render(<AccountOverview {...props} onView={() => undefined} />);
-      act(() => vi.advanceTimersByTime(60000));
-      expect(storedSpend()).toEqual(EMPTY_SPEND);
-      expect(vi.getTimerCount()).toBe(0);
-    },
-  );
+  it.each([
+    { visitors: [], enabled: true },
+    { visitors: sample, enabled: false },
+  ])('does not accumulate for an empty or disabled overview', (props) => {
+    vi.useFakeTimers();
+    render(<AccountOverview {...props} onView={() => undefined} />);
+    act(() => vi.advanceTimersByTime(60000));
+    expect(storedSpend()).toEqual(EMPTY_SPEND);
+    expect(vi.getTimerCount()).toBe(0);
+  });
 
   it('cleans up its one timer under StrictMode and continues without sessionStorage', () => {
     vi.useFakeTimers();
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('Unavailable'); });
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Unavailable'); });
-    const { unmount } = render(<StrictMode><AccountOverview visitors={sample} onView={() => undefined} /></StrictMode>);
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Unavailable');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('Unavailable');
+    });
+    const { unmount } = render(
+      <StrictMode>
+        <AccountOverview visitors={sample} onView={() => undefined} />
+      </StrictMode>,
+    );
     expect(vi.getTimerCount()).toBe(1);
     const previous = headline('Protected');
     tick();
@@ -212,11 +269,14 @@ describe('protection-aware spend demo', () => {
     render(<ThreatMonitor visitors={sample} now={FIXED_NOW} />);
     const table = screen.getByRole('table', { name: 'Threat monitoring results' });
     const funnel = screen.getByRole('region', { name: 'Traffic evaluation' });
-    const tableBefore = table.innerHTML; const funnelBefore = funnel.innerHTML;
+    const tableBefore = table.innerHTML;
+    const funnelBefore = funnel.innerHTML;
     tick();
     expect(table.innerHTML).toBe(tableBefore);
     expect(funnel.innerHTML).toBe(funnelBefore);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search visitors' }), { target: { value: 'no-match' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search visitors' }), {
+      target: { value: 'no-match' },
+    });
     fireEvent.click(screen.getByText(/Last 30 days/));
     expect(storedSpend().protectedCents).toBe(240);
     expect(headline('Visitors')).toContain('Visitors: 3.');

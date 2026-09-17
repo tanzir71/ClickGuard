@@ -9,9 +9,17 @@ export interface ActivityFunnelStage {
 }
 
 /** Nested current-state criteria, not a historical event-conversion sequence. */
-export function getActivityFunnelStages(visitors: VisitorVM[], now: string, rangeDays: number): ActivityFunnelStage[] {
+export function getActivityFunnelStages(
+  visitors: VisitorVM[],
+  now: string,
+  rangeDays: number,
+): ActivityFunnelStage[] {
   const cutoff = new Date(now).getTime() - rangeDays * 86400000;
-  let visits = 0; let paidVisitors = 0; let paidVisits = 0; let atRisk = 0; let thresholdCrossed = 0;
+  let visits = 0;
+  let paidVisitors = 0;
+  let paidVisits = 0;
+  let atRisk = 0;
+  let thresholdCrossed = 0;
   const decisions = { blocked: 0, pending: 0, failed: 0 };
 
   for (const visitor of visitors) {
@@ -19,20 +27,53 @@ export function getActivityFunnelStages(visitors: VisitorVM[], now: string, rang
     const paidVisitsInRange = visitsInRange.filter((visit) => visit.source === 'paid');
     visits += visitsInRange.length;
     if (paidVisitsInRange.length === 0) continue;
-    paidVisitors += 1; paidVisits += paidVisitsInRange.length;
+    paidVisitors += 1;
+    paidVisits += paidVisitsInRange.length;
     if (visitor.riskScore < 40) continue;
     atRisk += 1;
     if (visitor.riskScore < visitor.threshold) continue;
     thresholdCrossed += 1;
-    if (visitor.status === 'blocked' || visitor.status === 'pending' || visitor.status === 'failed') decisions[visitor.status] += 1;
+    if (visitor.status === 'blocked' || visitor.status === 'pending' || visitor.status === 'failed')
+      decisions[visitor.status] += 1;
   }
 
   return [
-    { id: 'evaluated', label: 'Evaluated', value: visitors.length, detail: `${visits.toLocaleString()} visits in the selected range. Filters select a visitor cohort.` },
-    { id: 'paid', label: 'Paid traffic', value: paidVisitors, detail: `${paidVisits.toLocaleString()} paid clicks in the selected range, across the selected visitors' platforms.`, tone: 'paid' },
-    { id: 'risk', label: 'At risk', value: atRisk, detail: 'Paid visitors with a current risk score of 40 or higher.', tone: 'warning' },
-    { id: 'threshold', label: 'Threshold met', value: thresholdCrossed, detail: 'At-risk visitors whose current score meets their policy threshold.', tone: 'danger' },
-    { id: 'blocked', label: 'Block decision', value: decisions.blocked + decisions.pending + decisions.failed, detail: `${decisions.blocked} blocked · ${decisions.pending} pending · ${decisions.failed} failed. A decision does not guarantee a completed platform exclusion.`, tone: 'danger' },
+    {
+      id: 'evaluated',
+      label: 'Evaluated',
+      value: visitors.length,
+      detail: `${visits.toLocaleString()} visits in the selected range. Filters select a visitor cohort.`,
+    },
+    {
+      id: 'paid',
+      label: 'Paid traffic',
+      value: paidVisitors,
+      detail: `${paidVisits.toLocaleString()} paid clicks in the selected range, across the selected visitors' platforms.`,
+      tone: 'paid',
+    },
+    {
+      id: 'risk',
+      label: 'At risk',
+      value: atRisk,
+      detail: 'Paid visitors with a current risk score of 40 or higher.',
+      tone: 'warning',
+    },
+    {
+      id: 'threshold',
+      label: 'Threshold met',
+      value: thresholdCrossed,
+      detail: 'At-risk visitors whose current score meets their policy threshold.',
+      tone: 'danger',
+    },
+    {
+      id: 'blocked',
+      label: 'Block decision',
+      value: decisions.blocked + decisions.pending + decisions.failed,
+      detail:
+        `${decisions.blocked} blocked · ${decisions.pending} pending · ${decisions.failed} failed. ` +
+        'A decision does not guarantee a completed platform exclusion.',
+      tone: 'danger',
+    },
   ];
 }
 

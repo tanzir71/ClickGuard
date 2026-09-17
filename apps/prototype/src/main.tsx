@@ -5,5 +5,9 @@ import { ThreatMonitoring } from './screens/ThreatMonitoring';
 import { AppShell } from './shell/AppShell';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><AppShell><ThreatMonitoring /></AppShell></React.StrictMode>,
+  <React.StrictMode>
+    <AppShell>
+      <ThreatMonitoring />
+    </AppShell>
+  </React.StrictMode>,
 );

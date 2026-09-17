@@ -40,7 +40,12 @@ export interface VisitVM {
   cpc?: number;
   landingPath: string;
   landingUrl: string;
-  interaction: { level: 'none' | 'low' | 'medium' | 'high'; scrollPct: number; clicks: number; pointerMoves: number };
+  interaction: {
+    level: 'none' | 'low' | 'medium' | 'high';
+    scrollPct: number;
+    clicks: number;
+    pointerMoves: number;
+  };
   botProbability: number;
   vpnProxy: boolean;
   formFill?: { emailMasked: string; deliverability: 'valid' | 'invalid' | 'disposable' | 'unknown' };
@@ -53,7 +58,15 @@ export interface VisitVM {
   scoreBefore: number;
   scoreAfter: number;
   afterBlock: boolean;
-  device: { type: string; os: string; browser: string; ua: string; screen: string; language: string; timezone: string };
+  device: {
+    type: string;
+    os: string;
+    browser: string;
+    ua: string;
+    screen: string;
+    language: string;
+    timezone: string;
+  };
 }
 
 export interface ExclusionVM {
@@ -100,7 +113,13 @@ export interface VisitorVM {
   priority: number;
   needsReview: boolean;
   verdict: string;
-  related?: { sameFingerprintIps: number; subnet24Ips: number; asnVisitorCount: number; asnBlockedCount: number; networkBlockedAccounts30d: number };
+  related?: {
+    sameFingerprintIps: number;
+    subnet24Ips: number;
+    asnVisitorCount: number;
+    asnBlockedCount: number;
+    networkBlockedAccounts30d: number;
+  };
 }
 
 export interface ThreatMonitorProps {
