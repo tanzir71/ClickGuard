@@ -1,0 +1,25 @@
+{
+  "name": "clickguard-threat-monitoring",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "dev": "pnpm --filter @clickguard/tokens build && pnpm --filter @clickguard/prototype dev",
+    "build": "pnpm --filter @clickguard/tokens build && pnpm --filter @clickguard/prototype build",
+    "storybook": "pnpm --filter @clickguard/tokens build && pnpm --filter @clickguard/ui storybook",
+    "build-storybook": "pnpm --filter @clickguard/tokens build && pnpm --filter @clickguard/ui build-storybook",
+    "test": "pnpm --filter @clickguard/prototype test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint packages/ui/src apps/prototype/src --ext .ts,.tsx && stylelint \"packages/ui/src/**/*.css\"",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build-storybook"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "@types/node": "^24.3.1",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "stylelint": "^16.24.0",
+    "stylelint-config-standard": "^39.0.0",
+    "typescript": "^5.9.2"
+  }
+}
