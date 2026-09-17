@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Download, Filter, Search, Shield, X } from 'lucide-react';
 import type { Platform, ThreatMonitorProps, VisitVM, VisitorStatus, VisitorVM } from '../model';
-import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows, Stat, type ActivityFunnelStage } from '../data';
+import { ActivityFunnel, BatchBar, DataTable, EmptyState, FilterChip, KeyValue, LoadingRows, Stat } from '../data';
+import { getActivityFunnelStages } from '../data/activityFunnel';
 import { BehaviorScrubber, DecisionRoute, EventTimeline, ExclusionList, RiskChart, RiskScore, ScoreWaterfall, SignalBar, SignalMeter, SourceTag, SpendReceipt, StatusPill, VerdictCard, VisitRibbon, formatDuration, platformName, shortTime } from '../domain';
 import { Button, Checkbox, IconButton, Menu, SegmentedControl, Sheet, Stack, Tabs, TextInput, Toast } from '../primitives';
 import styles from '../styles/ClickGuard.module.css';
@@ -94,32 +95,7 @@ export function ThreatMonitor({ visitors: initialVisitors, now, initialSimulatio
     return true;
   }), [visitors, simulation, search, status, paidOnly, platform, risk, rangeDays, savedView, now]);
 
-  const activityFunnel = useMemo(() => {
-    const cutoff = new Date(now).getTime() - rangeDays * 86400000;
-    let visits = 0; let paidVisitors = 0; let paidVisits = 0; let atRisk = 0; let thresholdCrossed = 0; let blocked = 0; let protectedSpend = 0;
-
-    for (const visitor of filtered) {
-      const visitsInRange = visitor.visits.filter((visit) => new Date(visit.startedAt).getTime() >= cutoff);
-      const paidVisitsInRange = visitsInRange.filter((visit) => visit.source === 'paid');
-      visits += visitsInRange.length;
-      if (paidVisitsInRange.length === 0) continue;
-      paidVisitors += 1; paidVisits += paidVisitsInRange.length;
-      if (visitor.riskScore < 40) continue;
-      atRisk += 1;
-      if (visitor.riskScore < visitor.threshold) continue;
-      thresholdCrossed += 1;
-      if (!['blocked', 'pending', 'failed'].includes(visitor.status)) continue;
-      blocked += 1; protectedSpend += visitor.protectedSpendEst;
-    }
-
-    return [
-      { id: 'evaluated', label: 'Evaluated', value: filtered.length, detail: `${visits.toLocaleString()} visits` },
-      { id: 'paid', label: 'Paid traffic', value: paidVisitors, detail: `${paidVisits.toLocaleString()} paid clicks`, tone: 'paid' },
-      { id: 'risk', label: 'At risk', value: atRisk, detail: 'Risk score ≥ 40', tone: 'warning' },
-      { id: 'threshold', label: 'Threshold', value: thresholdCrossed, detail: 'Policy threshold met', tone: 'danger' },
-      { id: 'blocked', label: 'Blocked', value: blocked, detail: `~$${protectedSpend.toFixed(0)} protected`, tone: 'danger' },
-    ] satisfies ActivityFunnelStage[];
-  }, [filtered, now, rangeDays]);
+  const activityFunnel = useMemo(() => getActivityFunnelStages(filtered, now, rangeDays), [filtered, now, rangeDays]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     const values: Record<SortKey, [string | number, string | number]> = {

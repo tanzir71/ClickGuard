@@ -26,26 +26,35 @@ button.stat:hover { border-color: var(--cg-semantic-border-strong); box-shadow: 
 .stat-warning .statValue { color: var(--cg-semantic-status-monitoring-fg); }
 .stat-success .statValue { color: var(--cg-semantic-status-clean-fg); }
 .activityFunnel { margin-bottom: var(--cg-space-4); padding: var(--cg-space-3) var(--cg-space-4); background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-lg); box-shadow: var(--cg-shadow-sm); }
-.activityFunnelHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--cg-space-4); margin-bottom: var(--cg-space-3); }
+.activityFunnelHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--cg-space-4); margin-bottom: var(--cg-space-2); }
 .activityFunnelHeader > div { display: flex; align-items: baseline; gap: var(--cg-space-2); }
 .activityFunnelHeader span { color: var(--cg-semantic-accent-hover); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
 .activityFunnelHeader h2 { margin: var(--cg-space-0); font-size: var(--cg-font-body-md); font-weight: 600; }
 .activityFunnelHeader p { margin: var(--cg-space-0); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
-.activityFunnelTrack { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--cg-space-5); margin: var(--cg-space-0); padding: var(--cg-space-0); list-style: none; }
+.activityFunnelGraph { position: relative; }
+.activityFunnelScale { position: absolute; top: 1.5rem; left: 0; display: flex; flex-direction: column; justify-content: space-between; width: 2.25rem; height: 4.5rem; color: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: 0.625rem; line-height: 1; }
+.activityFunnelScale span { height: 0; transform: translateY(-0.3125rem); }
+.activityFunnelPlot { position: absolute; top: 1.5rem; left: 2.75rem; width: calc(100% - 3.25rem); height: 4.5rem; overflow: visible; }
+.activityFunnelGuide { stroke: var(--cg-semantic-border-default); stroke-width: 1; stroke-dasharray: 3 5; opacity: 0.65; }
+.activityFunnelArea { fill: var(--cg-semantic-accent); fill-opacity: 0.1; }
+.activityFunnelProfile { fill: none; stroke: var(--cg-semantic-accent); stroke-width: 2; stroke-linejoin: round; }
+.activityFunnelAxis { fill: none; stroke: var(--cg-semantic-border-strong); stroke-width: 1; }
+.activityFunnelTrack { position: relative; display: grid; margin: 0 0.5rem 0 2.75rem; padding: 0; list-style: none; }
 .activityFunnelStage { position: relative; min-width: 0; }
-.activityFunnelStage:not(:last-child)::after { position: absolute; top: 0.1rem; right: calc(var(--cg-space-5) * -0.72); color: var(--cg-semantic-border-strong); content: '›'; }
-.activityFunnelStage > div, .activityFunnelStage > small { display: flex; align-items: center; justify-content: space-between; gap: var(--cg-space-2); }
-.activityFunnelStage > div span { overflow: hidden; color: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.activityFunnelStage > div strong { font-size: var(--cg-font-heading-md); font-variant-numeric: tabular-nums; }
-.activityFunnelBar { display: block; height: 0.375rem; margin: var(--cg-space-1) var(--cg-space-0); overflow: hidden; background: var(--cg-semantic-bg-subtle); border-radius: var(--cg-radius-pill); }
-.activityFunnelBar i { display: block; min-width: 0.25rem; height: 100%; background: var(--cg-semantic-accent); border-radius: inherit; transition: width var(--cg-motion-base) var(--cg-motion-ease); }
-.activityFunnelBar i[data-empty='true'] { min-width: 0; }
-.activityFunnelStage[data-tone='paid'] .activityFunnelBar i { background: var(--cg-semantic-source-paid); }
-.activityFunnelStage[data-tone='warning'] .activityFunnelBar i { background: var(--cg-color-amber-400); }
-.activityFunnelStage[data-tone='danger'] .activityFunnelBar i { background: var(--cg-semantic-status-blocked-fg); }
-.activityFunnelStage > small { min-width: 0; color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
-.activityFunnelStage > small span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.activityFunnelStage > small strong { color: var(--cg-semantic-text-primary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); font-weight: 500; }
+.activityFunnelStageButton { position: relative; display: block; width: 100%; padding: 6.75rem var(--cg-space-1) 0; border: 0; border-radius: var(--cg-radius-sm); background: transparent; color: var(--cg-semantic-text-primary); text-align: center; cursor: help; }
+.activityFunnelStageButton:focus-visible { outline: 2px solid var(--cg-semantic-accent); outline-offset: 2px; }
+.activityFunnelValue { position: absolute; left: 0; display: flex; align-items: baseline; justify-content: center; gap: var(--cg-space-2); width: 100%; line-height: 1.25rem; font-variant-numeric: tabular-nums; }
+.activityFunnelValue strong { font-size: var(--cg-font-heading-md); font-weight: 600; }
+.activityFunnelValue small { color: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
+.activityFunnelStep { display: block; font-size: var(--cg-font-body-sm); line-height: 1.25rem; white-space: nowrap; }
+.activityFunnelStep i { position: absolute; top: 5.5rem; left: calc(50% - 0.5rem); display: grid; place-items: center; width: 1rem; height: 1rem; border: 1px solid var(--cg-semantic-accent); border-radius: 50%; background: var(--cg-semantic-bg-surface); color: var(--cg-semantic-accent-hover); font-family: var(--cg-font-family-mono); font-size: 0.625rem; font-style: normal; line-height: 1; }
+.activityFunnelStage[data-tone='warning'] .activityFunnelStep i { color: var(--cg-semantic-status-monitoring-fg); border-color: var(--cg-semantic-status-monitoring-fg); }
+.activityFunnelStage[data-tone='danger'] .activityFunnelStep i { color: var(--cg-semantic-status-blocked-fg); border-color: var(--cg-semantic-status-blocked-fg); }
+.activityFunnelStageButton:hover .activityFunnelStep, .activityFunnelStageButton:focus-visible .activityFunnelStep { text-decoration: underline; text-underline-offset: 3px; }
+.activityFunnelTooltip { position: absolute; top: 100%; left: 0; z-index: 12; display: grid; gap: var(--cg-space-2); width: 17rem; padding: var(--cg-space-3); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-md); background: var(--cg-semantic-bg-surface); color: var(--cg-semantic-text-secondary); box-shadow: var(--cg-shadow-md); font-size: var(--cg-font-body-sm); }
+.activityFunnelTooltip strong { color: var(--cg-semantic-text-primary); font-weight: 600; }
+.activityFunnelStage:nth-last-child(-n+2) .activityFunnelTooltip { right: 0; left: auto; }
+.activityFunnelFooter { display: flex; justify-content: space-between; gap: var(--cg-space-3); margin-top: var(--cg-space-2); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-mono-sm); }
 .viewBar { display: flex; align-items: center; justify-content: space-between; min-height: 3.25rem; padding: var(--cg-space-2) var(--cg-space-3); background: var(--cg-semantic-bg-surface); border: 1px solid var(--cg-semantic-border-default); border-bottom: 0; border-radius: var(--cg-radius-lg) var(--cg-radius-lg) var(--cg-radius-sm) var(--cg-radius-sm); }
 .savedViews { display: flex; gap: var(--cg-space-1); }
 .savedViews button { padding: var(--cg-space-2) var(--cg-space-3); border: 0; border-radius: var(--cg-radius-pill); background: transparent; color: var(--cg-semantic-text-secondary); cursor: pointer; }

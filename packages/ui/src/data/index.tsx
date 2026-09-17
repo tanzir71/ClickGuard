@@ -1,42 +1,55 @@
-import { useId, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { AlertCircle, Inbox, Radar, SearchX } from 'lucide-react';
 import styles from '../styles/ClickGuard.module.css';
 import { Button } from '../primitives';
+import { formatFunnelPercent, getFunnelMetrics, getFunnelProfile, type ActivityFunnelStage } from './activityFunnel';
+export type { ActivityFunnelStage } from './activityFunnel';
+export { formatFunnelPercent, getActivityFunnelStages, getFunnelMetrics, getFunnelProfile } from './activityFunnel';
 
 export function Stat({ label, value, caption, tone = 'default', onClick }: { label: string; value: string; caption?: string; tone?: 'default' | 'danger' | 'warning' | 'success'; onClick?: () => void }) {
   const content = <><span className={styles.statLabel}>{label}</span><strong className={styles.statValue}>{value}</strong>{caption && <span className={styles.statCaption}>{caption}</span>}</>;
   return onClick ? <button type="button" className={`${styles.stat} ${styles[`stat-${tone}`]}`} onClick={onClick}>{content}</button> : <div className={`${styles.stat} ${styles[`stat-${tone}`]}`}>{content}</div>;
 }
 
-export interface ActivityFunnelStage {
-  id: string;
-  label: string;
-  value: number;
-  detail: string;
-  tone?: 'default' | 'paid' | 'warning' | 'danger';
-}
-
 export function ActivityFunnel({ stages, filtered, total, rangeLabel }: { stages: ActivityFunnelStage[]; filtered: number; total: number; rangeLabel: string }) {
   const headingId = useId();
-  const baseline = Math.max(stages[0]?.value ?? 0, 1);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [focused, setFocused] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const active = dismissed ? null : hovered ?? focused;
+  const metrics = getFunnelMetrics(stages);
+  const profile = getFunnelProfile(metrics.map((stage) => stage.share));
+  const empty = !stages[0]?.value;
   const scopeLabel = filtered === total ? `${total.toLocaleString()} visitors` : `${filtered.toLocaleString()} of ${total.toLocaleString()} visitors`;
 
   return <section className={styles.activityFunnel} aria-labelledby={headingId}>
     <header className={styles.activityFunnelHeader}>
-      <div><span>Activity funnel</span><h2 id={headingId}>From evaluated to blocked</h2></div>
+      <div><span>Activity funnel</span><h2 id={headingId}>Traffic evaluation</h2></div>
       <p>{scopeLabel} · {rangeLabel}</p>
     </header>
-    <ol className={styles.activityFunnelTrack}>
-      {stages.map((stage, index) => {
-        const percentage = Math.max(0, Math.min(100, Math.round((stage.value / baseline) * 100)));
-        return <li className={styles.activityFunnelStage} data-tone={stage.tone ?? 'default'} key={stage.id}>
-          <div><span>{index + 1}. {stage.label}</span><strong>{stage.value.toLocaleString()}</strong></div>
-          <span className={styles.activityFunnelBar} aria-hidden="true"><i data-empty={stage.value === 0} style={{ width: `${percentage}%` }} /></span>
-          <small><span>{stage.detail}</span><strong>{percentage}%</strong></small>
-        </li>;
-      })}
-    </ol>
-    <p className={styles.srOnly} aria-live="polite">{scopeLabel}. {stages.map((stage) => `${stage.label}: ${stage.value}`).join('. ')}.</p>
+    <div className={styles.activityFunnelGraph}>
+      <div className={styles.activityFunnelScale} aria-hidden="true"><span>100%</span><span>50%</span><span>0%</span></div>
+      <svg className={styles.activityFunnelPlot} viewBox="0 0 1000 72" preserveAspectRatio="none" aria-hidden="true">
+        {[0, 36].map((y) => <line className={styles.activityFunnelGuide} x1="0" x2="1000" y1={y} y2={y} key={y} vectorEffect="non-scaling-stroke" />)}
+        {!empty && <><path className={styles.activityFunnelArea} d={profile.area} /><path className={styles.activityFunnelProfile} d={profile.line} vectorEffect="non-scaling-stroke" /></>}
+        <path className={styles.activityFunnelAxis} d="M0,72 H1000 M994,68 L1000,72 L994,76" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <ol className={styles.activityFunnelTrack} style={{ gridTemplateColumns: `repeat(${Math.max(stages.length, 1)}, minmax(0, 1fr))` }}>
+        {metrics.map((stage, index) => {
+          const tooltipId = `${headingId}-${stage.id}`;
+          const continuation = stage.continuation === null ? 'No previous-stage rate available.' : `${formatFunnelPercent(stage.continuation)} of ${stages[index - 1].label.toLowerCase()} visitors continue here.`;
+          return <li className={styles.activityFunnelStage} data-tone={stage.tone ?? 'default'} key={stage.id} onMouseEnter={() => { setHovered(stage.id); setDismissed(false); }} onMouseLeave={() => setHovered(null)}>
+            <button type="button" className={styles.activityFunnelStageButton} aria-label={`${stage.label}: ${stage.value.toLocaleString()} visitors, ${stage.share === null ? 'no evaluated visitors' : `${formatFunnelPercent(stage.share)} of evaluated`}. Show stage details.`} aria-describedby={active === stage.id ? tooltipId : undefined} onFocus={() => { setFocused(stage.id); setDismissed(false); }} onBlur={() => setFocused(null)} onClick={() => setDismissed(false)} onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); setDismissed(true); } }}>
+              <span className={styles.activityFunnelValue} style={{ top: `${4.5 * (1 - Math.max(0, Math.min(1, stage.share ?? 0)))}rem` }}><strong>{stage.value.toLocaleString()}</strong><small>{formatFunnelPercent(stage.share)}</small></span>
+              <span className={styles.activityFunnelStep}><i aria-hidden="true">{index + 1}</i>{stage.label}</span>
+            </button>
+            {active === stage.id && <div id={tooltipId} className={styles.activityFunnelTooltip} role="tooltip"><strong>{stage.label} · {stage.value.toLocaleString()} visitors</strong><span>{stage.share === null ? 'No visitors in this cohort.' : `${formatFunnelPercent(stage.share)} of evaluated visitors.`} {index > 0 && continuation}</span><span>{stage.detail}</span></div>}
+          </li>;
+        })}
+      </ol>
+    </div>
+    <footer className={styles.activityFunnelFooter}><span>{empty ? 'No visitors match the current filters' : 'Share of evaluated visitors · current status'}</span><span>Evaluation stages →</span></footer>
+    <p className={styles.srOnly} aria-live="polite" aria-atomic="true">{scopeLabel}. {rangeLabel}. {stages.map((stage) => `${stage.label}: ${stage.value}`).join('. ')}.</p>
   </section>;
 }
 
