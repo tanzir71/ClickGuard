@@ -15,7 +15,7 @@
 .pageIntro h1 { margin: var(--cg-space-1) var(--cg-space-0); font-size: var(--cg-font-display); line-height: var(--cg-line-display); font-weight: 500; letter-spacing: -0.02em; }
 .pageIntro p { margin: var(--cg-space-0); color: var(--cg-semantic-text-secondary); }
 .eyebrow { font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); line-height: var(--cg-line-mono); text-transform: uppercase; letter-spacing: 0.04em; color: var(--cg-semantic-text-secondary); }
-.statsOverview { margin-bottom: var(--cg-space-6); }
+.statsOverview { width: 100%; max-width: calc(var(--cg-size-overview-card) * 5 + var(--cg-space-3) * 4); margin-bottom: var(--cg-space-6); }
 .statsHeading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cg-space-3); margin-bottom: var(--cg-space-3); }
 .statsHeading h2 { margin: 0; font-size: var(--cg-font-body-sm); font-weight: 600; }
 .statsHeading > span { color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-mono-sm); }

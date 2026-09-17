@@ -6,6 +6,8 @@ Keep the five scan-friendly totals, but add stronger tabular numerals, compact t
 
 The cards are explicitly labeled **Account overview / All tracked traffic**. Their account-wide scope is unchanged; the funnel inside the table remains the filter-aware summary.
 
+The overview row is left-aligned and capped at five 224px cards plus the existing 12px gaps (1168px total). The heading shares that cap. Cards may shrink together on narrower desktop layouts, but never grow to fill an ultrawide viewport. The table and funnel remain full-width, and hover breakdowns retain their existing width and behavior.
+
 ## Breakdown contracts
 
 | Card | Disjoint breakdown | Action |

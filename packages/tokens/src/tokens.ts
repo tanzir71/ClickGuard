@@ -33,7 +33,8 @@ export const tokens = {
     'body-sm': '0.8125rem', 'label-md': '0.875rem', 'mono-sm': '0.75rem', 'mono-data': '0.8125rem', 'numeric-lg': '1.5rem'
   },
   line: { display: '2.25rem', 'heading-lg': '1.75rem', 'heading-md': '1.5rem', body: '1.25rem', mono: '1rem', numeric: '2rem' },
-  size: { 'control-sm': '2rem', 'control-md': '2.25rem', 'row-compact': '2.75rem', 'row-default': '3.5rem', panel: '27.5rem', stream: '21.25rem' },
+  // Overview cards stop growing at 224px so wide dashboards retain compact summaries.
+  size: { 'control-sm': '2rem', 'control-md': '2.25rem', 'row-compact': '2.75rem', 'row-default': '3.5rem', 'overview-card': '14rem', panel: '27.5rem', stream: '21.25rem' },
   shadow: { sm: '0 1px 2px #1115530F', md: '0 2px 12px #1115530F', lg: '0 12px 35px #11155314', focus: '0 0 0 3px #554BFD40', cta: '0 2px 6px #D2FB0C66' },
   motion: { fast: '120ms', base: '200ms', slow: '300ms', ease: 'cubic-bezier(.2,0,0,1)' }
 } as const;
