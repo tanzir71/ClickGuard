@@ -215,6 +215,9 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .exclusionRow > span:last-child { text-align: right; font-weight: 500; }
 .exclusion-excluded { color: var(--cg-semantic-status-clean-fg); }
 .exclusion-syncing, .exclusion-not_connected, .exclusion-removed { color: var(--cg-semantic-text-secondary); }
+.exclusion-if_blocked { color: var(--cg-semantic-text-secondary); }
+.decisionRoute > [data-prospective='true'] { border: 1px dashed var(--cg-semantic-border-strong); border-radius: var(--cg-radius-sm); padding: var(--cg-space-2); }
+.receiptTotal[data-monitoring='true'] { color: var(--cg-semantic-status-monitoring-fg); }
 .exclusion-failed { color: var(--cg-semantic-status-blocked-fg); }
 .decisionRoute { display: grid; }
 .decisionRoute > div { position: relative; display: grid; grid-template-columns: var(--cg-space-6) 1fr; gap: var(--cg-space-2); min-height: 3.5rem; }

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { AlertTriangle, Check, Eye, LoaderCircle, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
-import type { ExclusionVM, Platform, SignalVM, Source, VisitVM, VisitorStatus } from '../model';
+import type { ExclusionVM, Platform, SignalVM, Source, VisitVM, VisitorVM, VisitorStatus } from '../model';
 import { KeyValue } from '../data';
 import { Button } from '../primitives';
+import { buildDecisionRoute } from './journeyNarrative';
 import styles from '../styles/ClickGuard.module.css';
 
 export { VisitRibbon } from './VisitRibbon';
@@ -45,29 +46,42 @@ export function SignalMeter({ label, value, level = 0, tone = 'neutral' }: { lab
 }
 
 export function VerdictCard({ status, sentence, meta }: { status: VisitorStatus; sentence: string; meta: string }) {
-  return <div className={`${styles.verdict} ${styles[`verdict-${status}`]}`}><header><StatusPill status={status} size="md" /><strong>{meta}</strong></header><p>{sentence}</p></div>;
+  return <div className={`${styles.verdict} ${styles[`verdict-${status}`]}`}><header><StatusPill status={status} size="md" /><strong>{meta}</strong></header><p>{sentence.split(/(\d+(?:\.\d+)?%?)/g).map((part, index) => /^\d/.test(part) ? <strong key={index}>{part}</strong> : part)}</p></div>;
 }
 
 export function ExclusionList({ rows, onRetry, protectionPaused = false }: { rows: ExclusionVM[]; onRetry?: () => void; protectionPaused?: boolean }) {
+  const [connectionNotice, setConnectionNotice] = useState('');
   if (!rows.length) return <p className={styles.muted}>Not on any exclusion list.</p>;
-  return <div className={styles.exclusionList}>{rows.map((row) => <div key={row.platform} className={styles.exclusionRow}><span className={styles.platformGlyph}>{platformShort[row.platform]}</span><span><strong>{platformLabel[row.platform]}</strong><small>{row.error ?? (row.state === 'not_connected' ? 'Connect to protect future paid visits' : 'All active campaigns')}</small></span><span className={styles[`exclusion-${protectionPaused && row.state !== 'removed' && row.state !== 'not_connected' ? 'failed' : row.state}`]}>{protectionPaused && row.state !== 'removed' && row.state !== 'not_connected' ? 'Ⅱ Protection paused' : row.state === 'excluded' ? '✓ Excluded' : row.state === 'syncing' ? '◌ Syncing' : row.state === 'failed' ? '! Failed' : row.state === 'removed' ? '↺ Removed' : '— Not connected'}<small>{row.at ? new Date(row.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</small>{row.state === 'failed' && <Button variant="link" size="sm" disabled={protectionPaused} onClick={onRetry}>Retry</Button>}</span></div>)}</div>;
+  return <div className={styles.exclusionList}>{rows.map((row) => <div key={row.platform} className={styles.exclusionRow}><span className={styles.platformGlyph}>{platformShort[row.platform]}</span><span><strong>{platformLabel[row.platform]}</strong><small>{row.error ?? (row.state === 'if_blocked' ? 'If risk crosses the block threshold' : row.state === 'not_connected' ? 'Connect to protect future paid visits' : 'All active campaigns')}</small></span><span className={styles[`exclusion-${protectionPaused && ['excluded', 'syncing', 'failed'].includes(row.state) ? 'failed' : row.state}`]}>{protectionPaused && ['excluded', 'syncing', 'failed'].includes(row.state) ? 'Ⅱ Protection paused' : row.state === 'if_blocked' ? 'If blocked' : row.state === 'excluded' ? '✓ Excluded' : row.state === 'syncing' ? '◌ Syncing' : row.state === 'failed' ? '! Failed' : row.state === 'removed' ? '↺ Removed' : '— Not connected'}<small>{row.at ? new Date(row.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</small>{row.state === 'not_connected' && <Button variant="link" size="sm" onClick={() => setConnectionNotice('Demo: connections are mocked')}>Connect</Button>}{row.state === 'failed' && <Button variant="link" size="sm" disabled={protectionPaused} onClick={onRetry}>Retry</Button>}</span></div>)}{connectionNotice && <p role="status">{connectionNotice}</p>}</div>;
 }
 
-export function DecisionRoute({ visits, blockedAtVisitId, exclusions, allowedBy }: { visits: VisitVM[]; blockedAtVisitId?: string; exclusions: ExclusionVM[]; allowedBy?: { user: string; at: string; note?: string } }) {
-  if (!visits.length) return null; const triggerIndex = Math.max(0, visits.findIndex((visit) => visit.id === blockedAtVisitId)); const trigger = visits[triggerIndex];
-  const nodes: Array<{ icon: string; title: string; sub: string }> = [
-    { icon: '○', title: `First seen · ${shortTime(visits[0].startedAt)}`, sub: `${visits[0].source} → ${visits[0].landingPath} · score ${visits[0].scoreAfter}` },
-    ...(visits.length > 2 ? [{ icon: '●', title: 'Risk climbing', sub: `${Math.max(1, triggerIndex)} visits · score ${visits[0].scoreAfter} → ${trigger.scoreBefore}` }] : []),
-    blockedAtVisitId ? { icon: '◆', title: `Threshold crossed · visit ${triggerIndex + 1}`, sub: `score ${trigger.scoreBefore} → ${trigger.scoreAfter}` } : { icon: '◇', title: `Closest to threshold · ${Math.max(...visits.map((visit) => visit.scoreAfter))}`, sub: 'Would block at 70 after a paid click' },
-    ...(exclusions.some((item) => item.state === 'excluded') ? [{ icon: '⛨', title: 'Excluded from ads', sub: exclusions.filter((item) => item.state === 'excluded').map((item) => platformLabel[item.platform]).join(', ') }] : []),
-    ...(allowedBy ? [{ icon: '✓', title: `Allowed · ${shortTime(allowedBy.at)}`, sub: `${allowedBy.user}${allowedBy.note ? ` · “${allowedBy.note}”` : ''}` }] : []),
-    { icon: '○', title: `Last seen · ${shortTime(visits.at(-1)!.startedAt)}`, sub: `${visits.at(-1)!.source} → ${visits.at(-1)!.landingPath}${visits.at(-1)!.afterBlock ? ' · after block' : ''}` },
-  ];
-  return <div className={styles.decisionRoute}>{nodes.map((node, index) => <div key={`${node.title}-${index}`}><i>{node.icon}</i><span><strong>{node.title}</strong><small>{node.sub}</small></span></div>)}</div>;
+export function DecisionRoute({ visits, blockedAtVisitId, exclusions, allowedBy, threshold = 70, status = 'monitoring' }: {
+  visits: VisitVM[]; blockedAtVisitId?: string; exclusions: ExclusionVM[]; allowedBy?: { user: string; at: string; note?: string }; threshold?: number; status?: VisitorStatus;
+}) {
+  const nodes = buildDecisionRoute({ visits, blockedAtVisitId, exclusions, allowedBy, threshold, status });
+  return <div className={styles.decisionRoute}>{nodes.map((node, index) => <div key={index} data-prospective={node.prospective}><i>{node.icon}</i><span><strong>{node.title}</strong><small>{node.sub}</small></span></div>)}</div>;
 }
 
-export function SpendReceipt({ paidVisits, unpaidVisits, wastedSpend, protectedSpendEst, paidAfterBlock }: { paidVisits: number; unpaidVisits: number; wastedSpend: number; protectedSpendEst: number; paidAfterBlock: number }) {
-  return <dl className={styles.receipt}><KeyValue label={`${paidVisits} paid clicks before block`} value={`$${wastedSpend.toFixed(2)}`} /><KeyValue label={`${unpaidVisits} unpaid visits`} value="No ad spend" /><KeyValue label="Paid clicks since block" value={paidAfterBlock} tone={paidAfterBlock ? 'danger' : 'success'} /><KeyValue label="Protected (est.)" value={`~$${protectedSpendEst.toFixed(0)} / 7d`} /><div className={styles.receiptTotal}><dt>Wasted</dt><dd>${wastedSpend.toFixed(2)}</dd></div></dl>;
+export function SpendReceipt({ visitor }: { visitor: VisitorVM }) {
+  const paid = visitor.visits.filter((visit) => visit.source === 'paid');
+  if (!paid.length) return <p className={styles.muted}>No ad spend: this visitor never clicked an ad.</p>;
+  const blocked = ['blocked', 'pending', 'failed'].includes(visitor.status);
+  const counted = blocked ? paid.filter((visit) => !visitor.blockedAt || visit.startedAt <= visitor.blockedAt) : paid;
+  const total = counted.reduce((sum, visit) => sum + (visit.cpc ?? 0), 0);
+  const since = paid.filter((visit) => visitor.blockedAt && visit.startedAt > visitor.blockedAt);
+  const failedPlatforms = new Set(visitor.exclusions.filter((row) => row.state === 'failed').map((row) => row.platform));
+  const leaked = since.some((visit) => visit.platform && failedPlatforms.has(visit.platform));
+  const monitoring = visitor.status === 'monitoring';
+  return <dl className={styles.receipt}>
+    <KeyValue label={blocked ? `${counted.length} paid ${counted.length === 1 ? 'click' : 'clicks'} before block` : monitoring ? `${paid.length} paid ${paid.length === 1 ? 'click' : 'clicks'} so far` : 'Spend on this visitor'} value={`$${total.toFixed(2)}`} />
+    {(blocked || monitoring) && Object.entries(platformLabel).map(([platform, label]) => {
+      const visits = counted.filter((visit) => visit.platform === platform);
+      return visits.length ? <KeyValue key={platform} label={label} value={`${visits.length} ${visits.length === 1 ? 'click' : 'clicks'} · $${visits.reduce((sum, visit) => sum + (visit.cpc ?? 0), 0).toFixed(2)}`} /> : null;
+    })}
+    {blocked && <><KeyValue label="Paid clicks since block" value={since.length} tone={leaked ? 'danger' : since.length ? 'default' : 'success'} /><KeyValue label="Protected (est.)" value={`~$${visitor.protectedSpendEst.toFixed(0)} / 7d`} /></>}
+    {!blocked && !monitoring && visitor.conversions > 0 && <KeyValue label="Conversion value" value={`${visitor.conversions} ${visitor.visits.filter((visit) => visit.conversion).every((visit) => visit.conversion?.type === 'purchase') ? visitor.conversions === 1 ? 'purchase' : 'purchases' : visitor.conversions === 1 ? 'conversion' : 'conversions'} · $${visitor.conversionValueTotal.toFixed(0)}`} />}
+    {(blocked || monitoring) && <div className={styles.receiptTotal} data-monitoring={monitoring}><dt>{monitoring ? 'Spent so far' : 'Wasted'}</dt><dd>${total.toFixed(2)}</dd></div>}
+  </dl>;
 }
 
 export function EventTimeline({ events, density = 'comfortable' }: { events: VisitVM['events']; density?: 'compact' | 'comfortable' }) {

@@ -29,4 +29,4 @@ export interface Visitor {
   allowedBy?: { user: string; at: string; note?: string }; visitIds: string[];
 }
 
-export interface DataSet { visitors: Visitor[]; visits: Visit[]; }
+export interface DataSet { account: { connectedPlatforms: Platform[]; timeZone: string }; visitors: Visitor[]; visits: Visit[]; }

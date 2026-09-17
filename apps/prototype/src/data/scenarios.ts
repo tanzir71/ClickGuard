@@ -1,4 +1,5 @@
 import type { DataSet, NetworkType, Platform, SignalHit, Source, Visit, Visitor, VisitorStatus } from './types';
+import { account } from './account';
 
 const device = {
   desktop: { type: 'desktop' as const, os: 'Windows 11', browser: 'Chrome 128', ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0', screen: '1920×1080', language: 'en-US', timezone: 'America/Chicago' },
@@ -59,7 +60,7 @@ function buildHero(config: HeroConfig): { visitor: Visitor; visits: Visit[] } {
       conversionType: config.converted && index === config.count - 1 ? 'purchase' : undefined, conversionValue: config.converted && index === config.count - 1 ? config.conversionValue : undefined,
       jsExecuted: !config.noJs, device: config.devices && index % 2 ? device.mobile : { ...device.desktop, timezone: config.scenario === 'H1' ? 'Asia/Dhaka' : device.desktop.timezone },
       interaction: { level: interaction, scrollPct: interaction === 'high' ? 78 : interaction === 'medium' ? 42 : interaction === 'low' ? 12 : 0, clicks: interaction === 'high' ? 5 : interaction === 'medium' ? 2 : 0, timeMs: durationMs, pointerMoves: interaction === 'none' ? 0 : interaction === 'low' ? 3 : 48 },
-      botProbability: Math.min(0.99, (config.bot ?? (config.status === 'clean' ? 0.12 : 0.55)) + index * 0.002), vpnProxy: Boolean(config.vpn),
+      botProbability: Math.min(0.99, (config.bot ?? (config.status === 'clean' ? 0.12 : 0.55)) + index * 0.002), vpnProxy: Boolean(config.vpn) && (config.scenario !== 'H3' || index === 1),
       formFill: config.form && index === config.count - 1 ? { emailMasked: config.form === 'valid' ? 'a•••@gmail.com' : 'j•••@mailinator.com', deliverability: config.form } : undefined,
       events: visitEvents(config, interaction, durationMs, index, visitSignals), signals: visitSignals, scoreBefore, scoreAfter, afterBlock, converted: config.converted && index === config.count - 1,
     };
@@ -92,5 +93,5 @@ export function createHeroScenarios(): DataSet {
     { scenario: 'H12', ip: '192.0.2.212', country: '', networkType: 'residential', status: 'clean', score: 8, count: 1, first: '2026-09-17T09:22:00Z', gapMinutes: 10, paidCount: 0, interaction: 'medium', bot: .08, signals: [] },
     { scenario: 'H13', ip: '194.61.40.12', city: 'Sofia', country: 'BG', isp: 'OVH', asn: 'AS16276', networkType: 'datacenter', status: 'blocked', score: 86, count: 6, first: '2026-09-16T11:00:00Z', gapMinutes: 9, triggerIndex: 3, paidCount: 4, platforms: ['meta_ads', 'google_ads'], interaction: 'none', bot: .81, form: 'invalid', signals: [signal('form_invalid_email', '3 undeliverable forms', 20), signal('bot_probability', '82% max', 18), signal('datacenter_ip', 'OVH', 22)] },
   ];
-  const built = heroes.map(buildHero); return { visitors: built.map((item) => item.visitor), visits: built.flatMap((item) => item.visits) };
+  const built = heroes.map(buildHero); return { account, visitors: built.map((item) => item.visitor), visits: built.flatMap((item) => item.visits) };
 }

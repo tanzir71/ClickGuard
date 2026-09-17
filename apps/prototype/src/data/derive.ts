@@ -1,3 +1,5 @@
+import { verdict } from './verdict';
+import { platforms } from './account';
 import type { VisitorVM } from '@clickguard/ui';
 import { SIGNAL_LABELS } from './scoring';
 import type { DataSet, SignalHit, Visit, Visitor } from './types';
@@ -16,18 +18,6 @@ function aggregateSignals(visits: Visit[]) {
   return [...map.values()].sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
 }
 
-function verdict(visitor: Visitor, visits: Visit[], paid: number, topSignals: SignalHit[]) {
-  const top = topSignals.filter((signal) => signal.points > 0).slice(0, 2).map((signal) => SIGNAL_LABELS[signal.signalId].toLowerCase()).join(' and '); const mitigating = topSignals.find((signal) => signal.points < 0);
-  const triggerIndex = Math.max(0, visits.findIndex((visit) => visit.id === visitor.blockedAtVisitId)) + 1; const when = visitor.blockedAt ? new Date(visitor.blockedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-  if (visitor.status === 'blocked') return `Blocked on ${when} after visit ${triggerIndex} of ${visits.length}: ${top || 'the cumulative risk pattern crossed the threshold'}.`;
-  if (visitor.status === 'pending') return `Blocking now: the score crossed ${visitor.threshold} at visit ${triggerIndex}, and exclusions are syncing to connected ad platforms.`;
-  if (visitor.status === 'failed') return `We blocked this visitor at visit ${triggerIndex}, but an ad platform rejected the exclusion. Review the campaign limit to stop more paid clicks.`;
-  if (visitor.status === 'allowed') return `Always allowed by ${visitor.allowedBy?.user ?? 'your team'} on ${visitor.allowedBy ? new Date(visitor.allowedBy.at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'}. We would have blocked it at a score of ${visitor.riskScore}.`;
-  if (visitor.status === 'monitoring' && paid === 0) return `Suspicious, but there’s nothing to block: this visitor has never clicked your ads, so no ad spend is at risk.`;
-  if (visitor.status === 'monitoring') return `Not blocked. Risk is ${visitor.riskScore}, ${visitor.threshold - visitor.riskScore} points under the threshold: ${top || 'some risk signals'}${mitigating ? `, but ${SIGNAL_LABELS[mitigating.signalId].toLowerCase()} lowers the score` : ''}.`;
-  return `Looks like a real visitor: ${visits.length} ${visits.length === 1 ? 'visit' : 'visits'} with normal behavior${visits.some((visit) => visit.converted) ? ' and a conversion' : ''}.`;
-}
-
 export function deriveVisitors(data: DataSet): VisitorVM[] {
   const visitsByIp = new Map<string, Visit[]>(); data.visits.forEach((visit) => visitsByIp.set(visit.ip, [...(visitsByIp.get(visit.ip) ?? []), visit]));
   return data.visitors.map((visitor) => {
@@ -38,7 +28,11 @@ export function deriveVisitors(data: DataSet): VisitorVM[] {
     return {
       ip: visitor.ip, city: visitor.geo.city, region: visitor.geo.region, country: visitor.geo.country || undefined, isp: visitor.asnName ?? visitor.isp, asn: visitor.asn, networkType: visitor.networkType,
       deviceCount: visitor.fingerprints.length, firstSeen: visitor.firstSeen, lastSeen: visitor.lastSeen, status: visitor.status, reviewed: visitor.reviewed, riskScore: visitor.riskScore, threshold: visitor.threshold,
-      blockedAt: visitor.blockedAt, blockedAtVisitId: visitor.blockedAtVisitId, decisionBy: visitor.decision?.by === 'auto' ? 'Auto' : visitor.decision?.by.user, exclusions: visitor.exclusions,
+      blockedAt: visitor.blockedAt, blockedAtVisitId: visitor.blockedAtVisitId, decisionBy: visitor.decision?.by === 'auto' ? 'Auto' : visitor.decision?.by.user, exclusions: visitor.status === 'clean' ? [] : platforms.map((platform) => {
+        if (!data.account.connectedPlatforms.includes(platform)) return { platform, state: 'not_connected' as const };
+        const recorded = visitor.exclusions.find((row) => row.platform === platform && row.state !== 'not_connected');
+        return recorded ?? { platform, state: visitor.status === 'allowed' ? 'removed' as const : 'if_blocked' as const };
+      }),
       allowedBy: visitor.allowedBy, visits: visits.map((visit) => ({ id: visit.id, startedAt: visit.startedAt, durationMs: visit.durationMs, source: visit.source, platform: visit.platform, campaign: visit.campaign,
         adGroup: visit.adGroup, keyword: visit.keyword, clickId: visit.gclid ?? visit.fbclid, cpc: visit.cpc, landingPath: visit.landingPath, landingUrl: visit.landingUrl, interaction: { level: visit.interaction.level, scrollPct: visit.interaction.scrollPct, clicks: visit.interaction.clicks, pointerMoves: visit.interaction.pointerMoves }, botProbability: visit.botProbability, vpnProxy: visit.vpnProxy,
         formFill: visit.formFill, conversion: visit.converted ? { type: visit.conversionType ?? 'conversion', value: visit.conversionValue } : undefined, jsExecuted: visit.jsExecuted, events: visit.events, activityBuckets: visit.activityBuckets,
@@ -48,7 +42,7 @@ export function deriveVisitors(data: DataSet): VisitorVM[] {
       maxBotProbability: bots.length ? Math.max(...bots) : 0, avgBotProbability: bots.length ? bots.reduce((sum, value) => sum + value, 0) / bots.length : 0, typicalInteraction: modeInteraction(visits), vpnProxyAny: visits.some((visit) => visit.vpnProxy),
       conversions: converted.length, conversionValueTotal: converted.reduce((sum, visit) => sum + (visit.conversionValue ?? 0), 0), formFills: { valid: forms.filter((value) => value === 'valid').length, invalid: forms.filter((value) => value === 'invalid').length, disposable: forms.filter((value) => value === 'disposable').length },
       priority: (visitor.scenario ? 40000 - Number(visitor.scenario.slice(1)) * 1000 : 0) + severityRank[visitor.status] * 1000 + Math.min(wastedSpend, 99) * 5 + recency, needsReview: visitor.status === 'monitoring' || visitor.status === 'failed' || (visitor.status === 'blocked' && !visitor.reviewed && recencyHours <= 24),
-      verdict: verdict(visitor, visits, paidVisits.length, topSignals), related: { sameFingerprintIps: visitor.related.sameFingerprintIps.length, subnet24Ips: visitor.related.subnet24Ips.length, asnVisitorCount: visitor.related.asnVisitorCount, asnBlockedCount: visitor.related.asnBlockedCount, networkBlockedAccounts30d: visitor.networkBlockedAccounts30d },
+      verdict: verdict(visitor, visits, topSignals, data.account.timeZone), related: { sameFingerprintIps: visitor.related.sameFingerprintIps.length, subnet24Ips: visitor.related.subnet24Ips.length, asnVisitorCount: visitor.related.asnVisitorCount, asnBlockedCount: visitor.related.asnBlockedCount, networkBlockedAccounts30d: visitor.networkBlockedAccounts30d },
     } satisfies VisitorVM;
   }).sort((a, b) => b.priority - a.priority);
 }

@@ -1,4 +1,5 @@
 import { mulberry32, pick } from './seed';
+import { account } from './account';
 import type { DataSet, NetworkType, Platform, SignalHit, Visit, Visitor, VisitorStatus } from './types';
 
 const NOW = new Date('2026-09-17T14:00:00Z').getTime();
@@ -51,5 +52,5 @@ export function createCrowd(count = 147): DataSet {
       allowedBy: status === 'allowed' ? { user: 'Tanzir', at: new Date(NOW - 3600000).toISOString(), note: 'Known customer' } : undefined, visitIds: visitorVisits.map((visit) => visit.id),
     });
   }
-  return { visitors, visits };
+  return { account, visitors, visits };
 }

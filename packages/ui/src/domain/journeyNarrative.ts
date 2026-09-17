@@ -1,5 +1,34 @@
 import type { VisitVM, VisitorVM } from '../model';
 
+export function buildDecisionRoute({ visits: input, blockedAtVisitId, exclusions, allowedBy, threshold, status }: Pick<VisitorVM, 'visits' | 'blockedAtVisitId' | 'exclusions' | 'allowedBy' | 'threshold' | 'status'>) {
+  const visits = [...input].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  if (!visits.length) return [];
+  const first = visits[0]; const last = visits.at(-1)!;
+  const triggerIndex = visits.findIndex((visit) => visit.id === blockedAtVisitId);
+  const trigger = visits[triggerIndex];
+  const peak = visits.reduce((best, visit) => visit.scoreAfter > best.scoreAfter ? visit : best);
+  const time = (at: string) => new Date(at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const source = (visit: VisitVM) => visit.source === 'paid' ? `Paid · ${visitSource(visit)}` : visit.source === 'direct' ? 'Direct' : visit.source === 'referral' ? 'Referral' : 'Organic search';
+  const nodes: Array<{ icon: string; title: string; sub: string; prospective?: boolean }> = [
+    { icon: '○', title: `First seen · ${time(first.startedAt)}`, sub: `${source(first)} → ${first.landingPath} · score ${first.scoreAfter}` },
+  ];
+  const middle = visits.slice(1, triggerIndex >= 0 ? triggerIndex : -1);
+  if (middle.length) {
+    const end = middle.at(-1)!.scoreAfter; const delta = end - first.scoreAfter;
+    nodes.push({ icon: '●', title: delta > 0 ? 'Risk climbing' : delta < 0 ? 'Risk falling' : 'Risk steady', sub: `${middle.length} ${middle.length === 1 ? 'visit' : 'visits'} · score ${first.scoreAfter} → ${end}` });
+  }
+  if (trigger) nodes.push({ icon: '◆', title: `Threshold crossed · visit ${triggerIndex + 1}`, sub: `score ${trigger.scoreBefore} → ${trigger.scoreAfter} · threshold ${threshold}` });
+  const excluded = exclusions.filter((row) => row.state === 'excluded');
+  if (excluded.length) nodes.push({ icon: '⛨', title: 'Excluded from ads', sub: excluded.map((row) => ({ google_ads: 'Google Ads', meta_ads: 'Meta Ads', microsoft_ads: 'Microsoft Ads' })[row.platform]).join(', ') });
+  if (allowedBy) nodes.push({ icon: '✓', title: `Allowed · ${time(allowedBy.at)}`, sub: `${allowedBy.user}${allowedBy.note ? ` · “${allowedBy.note}”` : ''}` });
+  if (visits.length > 1) nodes.push({ icon: '○', title: `Last seen · ${time(last.startedAt)}`, sub: `${source(last)} → ${last.landingPath}${last.afterBlock ? ' · after block' : ''}` });
+  if (!trigger && status === 'monitoring') {
+    nodes.push({ icon: '◇', title: `Closest to threshold · peaked at ${peak.scoreAfter} on visit ${visits.indexOf(peak) + 1}`, sub: time(peak.startedAt) });
+    nodes.push({ icon: '○', title: visits.some((visit) => visit.source === 'paid') ? `Would block if risk reaches ${threshold}` : 'Would block on its first paid click', sub: 'No block decision recorded', prospective: true });
+  }
+  return nodes;
+}
+
 export type StoryTone = 'neutral' | 'risk' | 'good' | 'warning';
 export interface JourneyChapter { id: string; title: string; detail: string; visitId: string; at: string; tone: StoryTone; kind: 'arrival' | 'pattern' | 'decision' | 'after' | 'conversion' | 'allowed' | 'monitoring' }
 

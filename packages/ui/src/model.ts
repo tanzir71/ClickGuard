@@ -49,7 +49,7 @@ export interface VisitVM {
 
 export interface ExclusionVM {
   platform: Platform;
-  state: 'excluded' | 'syncing' | 'failed' | 'not_connected' | 'removed';
+  state: 'excluded' | 'syncing' | 'failed' | 'not_connected' | 'removed' | 'if_blocked';
   at?: string;
   error?: string;
 }
