@@ -18,4 +18,7 @@ Storybook runs with `pnpm storybook`. The complete verification suite is `pnpm c
 - Switch **Visitors / Visits**, sort columns, expand a row, or use `/` to focus search.
 - Add `?simulate=empty`, `?simulate=error`, or `?simulate=slow` to exercise global states.
 
-Deployment URLs are intentionally left blank until projects are connected to Vercel.
+## Deployments
+
+- Prototype: https://clickguard-prototype-rho.vercel.app
+- Storybook: https://clickguard-storybook-omega.vercel.app
