@@ -20,6 +20,19 @@ const miniature = (scores: number[], minutes: number[], paidCount: number) => sc
 }));
 const quickBlock = miniature([14, 30, 66, 82, 86], [0, 2, 4, 6, 45], 4).map((visit, index) => ({ ...visit, afterBlock: index > 3 }));
 const converted = miniature([12, 32, 48, 23], [0, 240, 1440, 3000], 2).map((visit, index) => ({ ...visit, conversion: index === 3 ? { type: 'purchase' } : undefined }));
+export const DetailedRiskJourneys: Story = { render: () => <Stack gap="6">
+  <p>Time-scaled risk with a distinct decision marker. Hover or focus to inspect a visit; arrow keys browse and Enter selects.</p>
+  <Stack direction="row" gap="6">
+    <Stack><strong>Blocked + unpaid returns</strong><RiskChart visits={visits} threshold={70} blockedAtVisitId={visits[5].id} /></Stack>
+    <Stack><strong>Risk falls after conversion</strong><RiskChart visits={converted} threshold={70} /></Stack>
+  </Stack>
+  <Stack direction="row" gap="6">
+    <Stack><strong>Short burst + later return</strong><RiskChart visits={quickBlock} threshold={70} blockedAtVisitId="mini_3" /></Stack>
+    <Stack><strong>High unpaid risk, no decision</strong><RiskChart visits={miniature([35, 55, 80, 90], [0, 50, 90, 120], 0)} threshold={70} /></Stack>
+  </Stack>
+  <strong>Dense history — all 60 visits remain keyboard reachable</strong>
+  <RiskChart visits={miniature(Array.from({ length: 60 }, (_, index) => Math.min(100, index * 2)), Array.from({ length: 60 }, (_, index) => index * 720), 40)} threshold={70} blockedAtVisitId="mini_35" size="wide" />
+</Stack> };
 export const TableJourneys: Story = { render: () => <Stack gap="6">
   <p>Risk uses the same 0–100 scale. Each chart runs from its first to last visit. ● Paid · ○ Unpaid · ◆ Block decision · ▪ Conversion.</p>
   <Stack direction="row" gap="6">

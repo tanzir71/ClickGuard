@@ -195,18 +195,38 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .decisionRoute i { position: relative; z-index: 1; display: grid; place-items: center; width: var(--cg-space-6); height: var(--cg-line-body); font-style: normal; color: var(--cg-semantic-accent); }
 .decisionRoute strong, .decisionRoute small { display: block; }
 .decisionRoute small { margin-top: var(--cg-space-1); color: var(--cg-semantic-text-secondary); }
-.riskChart svg { display: block; width: 100%; overflow: visible; }
-.chart-panel svg { height: 8.75rem; }
-.chart-wide svg { height: 13.125rem; }
-.chartGrid { stroke: var(--cg-semantic-risk-threshold); stroke-width: 1; stroke-dasharray: 5 5; }
-.chartLabel, .chartBlockLabel { fill: var(--cg-semantic-status-blocked-fg); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
-.chartLine { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 2; stroke-linejoin: round; }
-.chartPaid { fill: var(--cg-semantic-source-paid); stroke: var(--cg-semantic-bg-surface); stroke-width: 2; cursor: pointer; }
-.chartUnpaid { fill: var(--cg-semantic-bg-surface); stroke: var(--cg-semantic-source-organic); stroke-width: 2; cursor: pointer; }
-.chartBlock { stroke: var(--cg-semantic-risk-threshold); stroke-width: 1; stroke-dasharray: 3 3; }
-.chartAfter { opacity: 0.42; }
-.chartSelected circle { stroke: var(--cg-semantic-accent-hover); stroke-width: 4; }
-.chartLegend { display: flex; gap: var(--cg-space-3); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
+.riskChart { min-width: 0; }
+.chartHeading { display: flex; justify-content: space-between; gap: var(--cg-space-2); margin-bottom: var(--cg-space-2); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
+.chartThresholdKey { display: inline-flex; align-items: center; gap: var(--cg-space-1); }
+.chartThresholdKey::before { content: ''; width: var(--cg-space-4); border-top: 1px dashed var(--cg-semantic-risk-threshold); }
+.chartPlot { display: block; width: 100%; overflow: visible; }
+.chart-panel { max-width: var(--cg-size-panel); }
+.chart-wide { width: 100%; }
+.chartGrid { stroke: var(--cg-semantic-border-default); stroke-width: 0.7; }
+.chartRiskZone { fill: var(--cg-semantic-status-blocked-bg); opacity: 0.5; }
+.chartAxisLabel, .chartThresholdLabel { fill: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
+.chartThresholdLabel { fill: var(--cg-semantic-status-blocked-fg); }
+.chartThreshold, .chartBlock { stroke: var(--cg-semantic-risk-threshold); stroke-width: 1; stroke-dasharray: 4 4; }
+.chartLine, .chartAfterLine { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 1.5; stroke-linejoin: round; }
+.chartAfterLine { stroke: var(--cg-semantic-source-organic); stroke-dasharray: 4 3; }
+.chartPaid { fill: var(--cg-semantic-source-paid); stroke: var(--cg-semantic-bg-surface); stroke-width: 1.5; }
+.chartUnpaid { fill: var(--cg-semantic-bg-surface); stroke: var(--cg-semantic-source-organic); stroke-width: 1.5; }
+.chartDecision { fill: var(--cg-semantic-risk-threshold); stroke: var(--cg-semantic-bg-surface); stroke-width: 1.5; }
+.chartPoint { cursor: pointer; outline: none; }
+.chartHitArea { fill: transparent; }
+.chartCrosshair { stroke: var(--cg-semantic-border-strong); stroke-width: 0.7; stroke-dasharray: 2 4; pointer-events: none; }
+.chartSelectionRing { fill: none; stroke: var(--cg-semantic-accent); stroke-width: 1.5; opacity: 0; pointer-events: none; }
+.chartSelected .chartSelectionRing, .chartPoint:hover .chartSelectionRing, .chartPoint:focus-visible .chartSelectionRing { opacity: 1; }
+.chartPoint:focus-visible .chartSelectionRing { stroke-width: 2.5; }
+.chartLegend { display: flex; flex-wrap: wrap; gap: var(--cg-space-2) var(--cg-space-3); margin-top: var(--cg-space-2); color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-body-sm); }
+.chartLegend > span { display: inline-flex; align-items: center; gap: var(--cg-space-1); white-space: nowrap; }
+.chartLegend svg { width: var(--cg-space-4); height: var(--cg-space-4); flex: none; }
+.chartReadout { display: grid; gap: var(--cg-space-1); margin-top: var(--cg-space-3); padding: var(--cg-space-2) var(--cg-space-3); border: 1px solid var(--cg-semantic-border-default); border-radius: var(--cg-radius-md); background: var(--cg-semantic-bg-subtle); font-size: var(--cg-font-body-sm); }
+.chartReadout > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--cg-space-1) var(--cg-space-2); }
+.chartReadout strong { font-weight: 600; }
+.chartReadout strong span, .chartReadout b span, .chartReadout > div:last-child { color: var(--cg-semantic-text-secondary); font-weight: 400; }
+.chartReadout b { font-family: var(--cg-font-family-mono); font-weight: 600; }
+.chartDecisionText { color: var(--cg-semantic-status-blocked-fg); }
 .chartEmpty { display: grid; place-items: center; min-height: 7rem; color: var(--cg-semantic-text-secondary); }
 .signalBar { position: relative; display: grid; grid-template-columns: 1.5rem 1fr auto; align-items: center; gap: var(--cg-space-2); padding: var(--cg-space-2) var(--cg-space-0); overflow: hidden; border-bottom: 1px solid var(--cg-semantic-border-default); }
 .signalBar > span:nth-child(2) { position: relative; z-index: 1; }

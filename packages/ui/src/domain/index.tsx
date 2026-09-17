@@ -7,6 +7,7 @@ import styles from '../styles/ClickGuard.module.css';
 
 export { VisitRibbon } from './VisitRibbon';
 export { buildVisitJourney } from './visitJourney';
+export { RiskChart } from './RiskChart';
 
 const statusMeta: Record<VisitorStatus, { label: string; icon: typeof Check }> = {
   blocked: { label: 'Blocked', icon: ShieldX }, monitoring: { label: 'Monitoring', icon: Eye }, clean: { label: 'Clean', icon: Check },
@@ -40,19 +41,6 @@ export function SignalBar({ signal }: { signal: SignalVM }) {
 
 export function SignalMeter({ label, value, level = 0, tone = 'neutral' }: { label: string; value: string; level?: number; tone?: 'neutral' | 'warning' | 'danger' | 'success' }) {
   return <div className={`${styles.signalMeter} ${styles[`meter-${tone}`]}`}><span>{label}</span><strong>{value}</strong><div>{Array.from({ length: 4 }, (_, index) => <i key={index} data-active={index < level} />)}</div></div>;
-}
-
-export function RiskChart({ visits, threshold, blockedAtVisitId, selectedVisitId, size = 'panel', onSelectVisit }: { visits: VisitVM[]; threshold: number; blockedAtVisitId?: string; selectedVisitId?: string; size?: 'panel' | 'wide'; onSelectVisit?: (id: string) => void }) {
-  if (!visits.length) return <div className={styles.chartEmpty}>No visits in this range</div>;
-  const width = size === 'wide' ? 760 : 380; const height = size === 'wide' ? 210 : 140; const padX = 26; const padY = 20;
-  const points = visits.map((visit, index) => ({ x: padX + (visits.length === 1 ? (width - padX * 2) / 2 : index * ((width - padX * 2) / (visits.length - 1))), y: height - padY - (visit.scoreAfter / 100) * (height - padY * 2), visit }));
-  const path = points.map((point, index) => index === 0 ? `M ${point.x} ${point.y}` : `H ${point.x} V ${point.y}`).join(' ');
-  const thresholdY = height - padY - (threshold / 100) * (height - padY * 2);
-  return <div className={`${styles.riskChart} ${styles[`chart-${size}`]}`}><svg viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`Risk journey. Block threshold ${threshold}.`}>
-    <line className={styles.chartGrid} x1={padX} x2={width - padX} y1={thresholdY} y2={thresholdY} /><text className={styles.chartLabel} x={padX} y={thresholdY - 6}>Block at {threshold}</text>
-    <path className={styles.chartLine} d={path} />
-    {points.map((point, index) => <g key={point.visit.id} className={`${point.visit.afterBlock ? styles.chartAfter : ''} ${point.visit.id === selectedVisitId ? styles.chartSelected : ''}`} role="button" tabIndex={0} aria-label={`Visit ${index + 1}, score ${point.visit.scoreAfter}`} onClick={() => onSelectVisit?.(point.visit.id)} onKeyDown={(event) => event.key === 'Enter' && onSelectVisit?.(point.visit.id)}><circle className={point.visit.source === 'paid' ? styles.chartPaid : styles.chartUnpaid} cx={point.x} cy={point.y} r={point.visit.id === blockedAtVisitId ? 7 : 5} />{point.visit.id === blockedAtVisitId && <><line className={styles.chartBlock} x1={point.x} x2={point.x} y1={padY} y2={height - padY} /><text className={styles.chartBlockLabel} x={point.x + 5} y={padY + 8}>Blocked</text></>}</g>)}
-  </svg><div className={styles.chartLegend}><span>● Paid</span><span>○ Unpaid</span><span>⚑ Block</span></div></div>;
 }
 
 export function VerdictCard({ status, sentence, meta }: { status: VisitorStatus; sentence: string; meta: string }) {
