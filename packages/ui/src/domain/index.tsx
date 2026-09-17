@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { AlertTriangle, Check, Eye, LoaderCircle, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import type { ExclusionVM, Platform, SignalVM, Source, VisitVM, VisitorStatus } from '../model';
 import { KeyValue } from '../data';
-import { Button, Tooltip } from '../primitives';
+import { Button } from '../primitives';
 import styles from '../styles/ClickGuard.module.css';
+
+export { VisitRibbon } from './VisitRibbon';
+export { buildVisitJourney } from './visitJourney';
 
 const statusMeta: Record<VisitorStatus, { label: string; icon: typeof Check }> = {
   blocked: { label: 'Blocked', icon: ShieldX }, monitoring: { label: 'Monitoring', icon: Eye }, clean: { label: 'Clean', icon: Check },
@@ -37,15 +40,6 @@ export function SignalBar({ signal }: { signal: SignalVM }) {
 
 export function SignalMeter({ label, value, level = 0, tone = 'neutral' }: { label: string; value: string; level?: number; tone?: 'neutral' | 'warning' | 'danger' | 'success' }) {
   return <div className={`${styles.signalMeter} ${styles[`meter-${tone}`]}`}><span>{label}</span><strong>{value}</strong><div>{Array.from({ length: 4 }, (_, index) => <i key={index} data-active={index < level} />)}</div></div>;
-}
-
-export function VisitRibbon({ visits, blockedAtVisitId, onDotClick }: { visits: VisitVM[]; blockedAtVisitId?: string; onDotClick?: (id: string) => void }) {
-  if (!visits.length) return <span className={styles.muted}>No visits</span>;
-  const first = new Date(visits[0].startedAt).getTime(); const last = new Date(visits.at(-1)!.startedAt).getTime(); const span = Math.max(1, last - first);
-  return <div className={styles.ribbon} aria-label={`${visits.length} visit journey`}>{visits.map((visit, index) => {
-    const left = visits.length === 1 ? 50 : ((new Date(visit.startedAt).getTime() - first) / span) * 100;
-    return <Tooltip key={visit.id} content={`Visit ${index + 1} · ${visit.source} · score ${visit.scoreBefore} → ${visit.scoreAfter}`}><button type="button" aria-label={`Visit ${index + 1}, ${visit.source}`} data-paid={visit.source === 'paid'} data-after={visit.afterBlock} data-blocked={visit.id === blockedAtVisitId} style={{ left: `${left}%` }} onClick={() => onDotClick?.(visit.id)} /></Tooltip>;
-  })}</div>;
 }
 
 export function RiskChart({ visits, threshold, blockedAtVisitId, selectedVisitId, size = 'panel', onSelectVisit }: { visits: VisitVM[]; threshold: number; blockedAtVisitId?: string; selectedVisitId?: string; size?: 'panel' | 'wide'; onSelectVisit?: (id: string) => void }) {

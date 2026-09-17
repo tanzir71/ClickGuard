@@ -1,5 +1,7 @@
 # Implementation decisions
 
+- **2026-09-17 · Table journeys:** Replaced the flat visit ribbon with an actual per-visit risk trajectory after feedback that rows looked identical. The y-axis is fixed at 0–100; x uses real elapsed time within each visitor's full recorded history, with the span shown explicitly (not a shared calendar axis). Filled/hollow circles distinguish paid/unpaid; diamonds mark block decisions, squares mark conversions. Post-decision continuation is dashed, not hidden. Dense histories retain the exact path and all keyboard-selectable visits, with visually thinned markers. One tab stop per row avoids hundreds of dot controls. Existing deterministic fixture scores are unchanged; we do not invent variation.
+
 - **2026-09-17 · Scope:** Built every P0 state and interaction before P1 analytics. Heatmaps, chart brushing, raw JSON, custom saved views, and quick-filter affordances remain intentional P1 cuts per `08_codex_handover.md` §6.
 - **2026-09-17 · Icons:** Platform identity uses the specified text glyphs (`G`, `M`, `MS`) rather than third-party brand assets.
 - **2026-09-17 · Data volume:** The deterministic crowd generator targets 160 visitors and approximately 900 visits while preserving all H1–H13 mechanics.

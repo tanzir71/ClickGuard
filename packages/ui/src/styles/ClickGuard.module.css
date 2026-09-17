@@ -137,7 +137,10 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .newTag { padding: var(--cg-space-0) var(--cg-space-1); color: var(--cg-semantic-accent-hover); background: var(--cg-semantic-bg-selected); border-radius: var(--cg-radius-sm); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); text-transform: uppercase; }
 .searchMatch { color: inherit; background: var(--cg-color-lime-100); font-weight: 700; }
 .cellMain, .cellSub { display: block; max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.journeyCell { min-width: 11rem; }
+.journeyCell { min-width: 13rem; }
+.journeyGuide { padding: var(--cg-space-2) var(--cg-space-3); border-bottom: 1px solid var(--cg-semantic-border-default); color: var(--cg-semantic-text-secondary); text-align: left; font-size: var(--cg-font-mono-sm); }
+.journeyGuide span { display: inline-block; margin-right: var(--cg-space-4); }
+.journeyGuide b { color: var(--cg-semantic-text-primary); font-weight: 500; }
 .numericCell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .headerRight { justify-content: flex-end; text-align: right; }
 .sortIdle { color: var(--cg-semantic-text-disabled); }
@@ -241,13 +244,25 @@ button.stat:focus-visible { outline: 2px solid var(--stat-accent); outline-offse
 .recentVisits button { display: grid; grid-template-columns: 6.5rem 7.5rem 1fr auto; align-items: center; gap: var(--cg-space-2); padding: var(--cg-space-2) var(--cg-space-0); text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--cg-semantic-border-default); color: inherit; cursor: pointer; }
 .recentVisits button > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .recentVisits button small { color: var(--cg-semantic-text-secondary); }
-.ribbon { position: relative; width: 100%; height: 1.25rem; }
-.ribbon::before { content: ''; position: absolute; top: 0.6rem; right: var(--cg-space-0); left: var(--cg-space-0); height: 1px; background: var(--cg-semantic-border-strong); }
-.ribbon .tooltipWrap { position: absolute; top: 0.25rem; }
-.ribbon button { position: absolute; width: 0.625rem; height: 0.625rem; padding: var(--cg-space-0); transform: translateX(-50%); border: 2px solid var(--cg-semantic-source-organic); border-radius: var(--cg-radius-pill); background: var(--cg-semantic-bg-surface); cursor: pointer; }
-.ribbon button[data-paid='true'] { background: var(--cg-semantic-source-paid); border-color: var(--cg-semantic-source-paid); }
-.ribbon button[data-after='true'] { opacity: 0.38; }
-.ribbon button[data-blocked='true'] { box-shadow: 0 0 0 0.1875rem var(--cg-semantic-status-blocked-bg); border-color: var(--cg-semantic-status-blocked-fg); }
+.ribbon { display: block; width: 12.5rem; padding: var(--cg-space-0); border: 0; border-radius: var(--cg-radius-sm); color: var(--cg-semantic-text-primary); background: transparent; text-align: left; cursor: pointer; }
+.ribbon:focus-visible { outline: 2px solid var(--cg-semantic-accent); outline-offset: 3px; }
+.ribbonHeading { display: flex; justify-content: space-between; gap: var(--cg-space-2); font-size: var(--cg-font-mono-sm); line-height: var(--cg-line-mono); }
+.ribbonHeading > span:last-child { color: var(--cg-semantic-text-secondary); font-variant-numeric: tabular-nums; }
+.ribbon svg { display: block; width: 100%; height: 3rem; overflow: visible; }
+.ribbonCaption { display: block; color: var(--cg-semantic-text-secondary); font-size: var(--cg-font-mono-sm); line-height: var(--cg-line-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ribbonThreshold { stroke: var(--cg-semantic-border-strong); stroke-width: 1; stroke-dasharray: 3 3; }
+.ribbonScale { fill: var(--cg-semantic-text-secondary); font-family: var(--cg-font-family-mono); font-size: var(--cg-font-mono-sm); }
+.ribbonAxis { fill: none; stroke: var(--cg-semantic-border-default); stroke-width: 1; }
+.ribbonRisk { fill: none; stroke: var(--cg-semantic-risk-line); stroke-width: 1.5; stroke-linejoin: round; }
+.ribbonAfter { stroke: var(--cg-semantic-border-strong); stroke-dasharray: 3 2; }
+.ribbonAfterArea { fill: var(--cg-semantic-bg-subtle); }
+.ribbonDecisionLine { stroke: var(--cg-semantic-status-blocked-fg); stroke-width: 1; stroke-dasharray: 2 2; }
+.ribbonMarker { stroke: var(--cg-semantic-source-paid); stroke-width: 1.5; fill: var(--cg-semantic-bg-surface); }
+.ribbonMarker[data-kind='paid'] { fill: var(--cg-semantic-source-paid); }
+.ribbonMarker[data-after='true'] { stroke: var(--cg-semantic-border-strong); }
+.ribbonMarker[data-kind='decision'] { fill: var(--cg-semantic-status-blocked-fg); stroke: var(--cg-semantic-bg-surface); }
+.ribbonMarker[data-kind='conversion'] { fill: var(--cg-semantic-status-clean-fg); stroke: var(--cg-semantic-bg-surface); }
+.ribbonActive { fill: none; stroke: var(--cg-semantic-accent); stroke-width: 1; }
 .riskScore { display: grid; grid-template-columns: auto minmax(4rem, 1fr); align-items: center; gap: var(--cg-space-2); min-width: 6.5rem; }
 .riskScore > strong { font-size: var(--cg-font-heading-md); font-variant-numeric: tabular-nums; }
 .riskScore > small { grid-column: 1 / -1; margin-top: calc(var(--cg-space-1) * -1); text-transform: capitalize; text-align: right; }
