@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Eye, Flag, Globe, LogIn, LogOut, MousePointer2, ShieldCheck, ShieldX, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Eye, Flag, Globe, LogIn, LogOut, MousePointer2, ShieldCheck, ShieldX, ShoppingBag, TrendingUp } from 'lucide-react';
 import type { VisitVM, VisitorVM } from '../model';
 import { KeyValue } from '../data';
 import { BehaviorScrubber, EventTimeline, RiskChart, ScoreWaterfall, SignalMeter, SourceTag, StatusPill, formatDuration, platformName, shortTime } from '../domain';
 import { buildJourneyNarrative, describeJourneyVisit, keyRecordedEvents, visitSource, type JourneyChapter } from '../domain/journeyNarrative';
 import { Button, IconButton, Stack, Tabs } from '../primitives';
+import { VisitSequence } from './VisitSequence';
 import styles from '../styles/ClickGuard.module.css';
 
 export type JourneyTab = 'events' | 'score' | 'device';
@@ -117,11 +118,7 @@ export function FullJourney({ visitor, selectedVisitId, setSelectedVisitId, tab,
       </aside>
       {visit && episode ? <article className={styles.storyDetail} ref={detailRef} aria-label={`Visit ${index + 1} overview`}>
         <header className={styles.episodeHeader}><div><span className={styles.eyebrow}>Visit {index + 1} of {story.visits.length}</span><Stack direction="row" gap="1"><IconButton label="Previous visit" disabled={index === 0} onClick={() => selectVisit(story.visits[index - 1].id)}><ChevronLeft /></IconButton><IconButton label="Next visit" disabled={index === story.visits.length - 1} onClick={() => selectVisit(story.visits[index + 1].id)}><ChevronRight /></IconButton></Stack></div><h3>{episode.title}</h3><p><Clock3 aria-hidden="true" />{shortTime(visit.startedAt)} · {formatDuration(visit.durationMs)} on site</p>{filter !== 'all' && !shown.includes(visit) && <small>This selected visit is outside the list filter. <button type="button" onClick={() => setFilter('all')}>Show all visits</button></small>}</header>
-        <ol className={styles.visitSequence} aria-label="Visit story">
-          <li><i><LogIn aria-hidden="true" /></i><span>01 · Arrival</span><strong>{visitSource(visit)}</strong><p title={visit.landingUrl}>{visit.landingPath}</p>{visit.source === 'paid' && visit.cpc !== undefined && <small>${visit.cpc.toFixed(2)} click cost</small>}</li>
-          <li><i><MousePointer2 aria-hidden="true" /></i><span>02 · On the site</span><strong>{episode.behavior}</strong><p>{!visit.jsExecuted ? 'The tracking tag did not run.' : `${visit.interaction.clicks} clicks · ${visit.interaction.pointerMoves} pointer moves`}</p><small>{visit.jsExecuted ? `${Math.round(visit.botProbability * 100)}% bot probability` : 'Interaction cannot be assessed'}</small></li>
-          <li data-tone={episode.tone}><i>{episode.decision ? <ShieldX aria-hidden="true" /> : visit.conversion ? <ShoppingBag aria-hidden="true" /> : episode.delta < 0 ? <TrendingDown aria-hidden="true" /> : <TrendingUp aria-hidden="true" />}</i><span>03 · Result</span><strong>{episode.result}</strong><p className={styles.episodeScore}>{visit.scoreBefore} <ArrowRight aria-hidden="true" /> <b>{visit.scoreAfter}</b> <small>risk</small></p><small>{episode.decision ? `Threshold ${visitor.threshold} · decision recorded` : visit.conversion?.value !== undefined ? `$${visit.conversion.value.toFixed(2)} conversion value` : `${episode.delta > 0 ? '+' : ''}${episode.delta} points this visit`}</small></li>
-        </ol>
+        <VisitSequence visit={visit} visitor={visitor} />
         {visit.signals.length > 0 && <div className={styles.episodeSignals}><span>Evidence on this visit</span>{[...visit.signals].sort((a, b) => Math.abs(b.points) - Math.abs(a.points)).slice(0, 3).map((signal) => <button key={signal.id} type="button" data-lowers={signal.points < 0} title={signal.value} onClick={() => openEvidence('score')}>{signal.points < 0 ? '↓' : '↑'} {signal.label}</button>)}<Button variant="link" size="sm" onClick={() => openEvidence('score')}>Why this score?</Button></div>}
         <RecordedActivity visit={visit} onEvents={() => openEvidence('events')} />
         <div className={styles.evidenceDisclosure}><button type="button" aria-expanded={evidenceOpen} aria-controls={evidenceId} onClick={() => setEvidenceOpen((open) => !open)}><span><strong>Inspect the underlying evidence</strong><small>Events, score contributions, source details, and device data</small></span><ChevronDown aria-hidden="true" /></button>

@@ -73,6 +73,31 @@ describe('story-led full journey', () => {
     expect(screen.getByRole('tab', { name: 'Events' }).getAttribute('aria-selected')).toBe('true');
   });
 
+  it('presents three ordered stages with decorative connectors and truthful metric footers', () => {
+    render(<JourneyHarness />);
+    const sequence = screen.getByRole('list', { name: 'Visit story' });
+    const stages = within(sequence).getAllByRole('listitem');
+    expect(stages).toHaveLength(3);
+    expect(stages.map((stage) => stage.querySelector('header')?.textContent)).toEqual(['01Arrival', '02On the site', '03Result']);
+    expect(sequence.querySelectorAll('svg[class*="sequenceConnector"][aria-hidden="true"]')).toHaveLength(2);
+    expect(within(sequence).queryByRole('button')).toBeNull();
+    expect(stages[0].textContent).toContain('Click cost$4.10');
+    expect(stages[1].textContent).toContain('Bot probability95%');
+    expect(stages[2].textContent).toContain('Block decision');
+    expect(stages[2].textContent).toContain('Risk score66 to 76');
+    expect(stages[2].getAttribute('data-tone')).toBe('risk');
+  });
+
+  it('keeps unavailable behavior and unknown click cost explicit in the flow', () => {
+    render(<JourneyHarness visitor={{ ...blocked, visits: blocked.visits.map((visit) => ({ ...visit, jsExecuted: false, cpc: undefined, events: [] })) }} />);
+    const sequence = screen.getByRole('list', { name: 'Visit story' });
+    expect(within(sequence).getByText('Not recorded')).toBeTruthy();
+    expect(within(sequence).getByText('Behavior unavailable')).toBeTruthy();
+    expect(within(sequence).getByText('Unavailable')).toBeTruthy();
+    expect(within(sequence).queryByText('Bot probability')).toBeNull();
+    expect(within(sequence).queryByText('No interaction recorded')).toBeNull();
+  });
+
   it('shows chronological day groups and functional filters, including the empty state', () => {
     render(<JourneyHarness />);
     const stream = within(screen.getByRole('complementary', { name: 'Journey visits' }));
